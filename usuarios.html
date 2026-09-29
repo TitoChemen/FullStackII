@@ -12,8 +12,8 @@
 </head>
 <body>
 
-    <!-- ===== NAVBAR RESPONSIVE (colapsa a hamburguesa en móvil) ===== -->
-    <nav class="navbar navbar-expand-md navbar-sanmarcos sticky-top">
+    <!-- ===== NAVBAR RESPONSIVE ===== -->
+    <nav class="navbar navbar-expand-md sticky-top">
         <div class="container">
             <a class="navbar-brand" href="admin.html">
                 <i class="material-icons">pets</i> Veterinaria San Marcos
@@ -29,7 +29,7 @@
                 </ul>
                 <div class="d-flex align-items-center gap-2 mt-3 mt-md-0">
                     <span class="chip-rol"><span id="nombreUsuarioActivo"></span> · <span id="chipRolActivo"></span></span>
-                    <button class="btn btn-peligro-out btn-sm" onclick="cerrarSesion()">
+                    <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesion()">
                         <i class="bi bi-box-arrow-right"></i> Salir
                     </button>
                 </div>
@@ -39,9 +39,9 @@
 
     <div class="container contenedor-ancho py-4">
 
-        <div class="encabezado-seccion">
-            <h4><i class="bi bi-people"></i> Gestión de usuarios</h4>
-            <span class="etiqueta-modulo">Solo Administrador</span>
+        <div class="encabezado-seccion d-flex align-items-center justify-content-between mb-2">
+            <h4 class="mb-0"><i class="bi bi-people"></i> Gestión de usuarios</h4>
+            <span class="badge">Solo Administrador</span>
         </div>
         <p class="text-muted mb-3">
             Crea cuentas desde <a href="registro.html">registro</a>, reasigna roles o desactiva accesos del personal y dueños.
@@ -49,7 +49,7 @@
 
         <div class="card p-0">
             <div class="table-responsive">
-                <table class="table tabla-sanmarcos mb-0">
+                <table class="table mb-0">
                     <thead>
                         <tr>
                             <th>Usuario</th>
@@ -66,7 +66,7 @@
 
     </div>
 
-    <footer class="pie-sanmarcos text-center py-4">
+    <footer class="text-center py-4">
         © 2026 Veterinaria San Marcos — Todos los derechos reservados
     </footer>
 
