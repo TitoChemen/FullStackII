@@ -1,0 +1,48 @@
+/* Estilos propios de la parte pública (Home, Agendar, Contacto).
+   Complementan estilos.css (paleta Caramel & Dulce de Leche). */
+
+.top-bar {
+  background: rgba(28, 16, 14, 0.95);
+  border-bottom: 1px solid rgba(224, 159, 102, 0.2);
+}
+
+.hero-publico {
+  border-bottom: 2px solid rgba(224, 159, 102, 0.3);
+}
+
+.icono-servicio {
+  font-size: 3rem;
+  color: var(--caramel-accent);
+}
+
+.mapa-iframe {
+  width: 100%;
+  height: 250px;
+  border: 0;
+  border-radius: 8px;
+}
+
+.contact-info {
+  background-color: rgba(58, 38, 34, 0.85);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid rgba(224, 159, 102, 0.3);
+  border-left: 4px solid var(--dulce-de-leche);
+}
+
+.footer-publico {
+  background-color: rgba(20, 11, 9, 0.95);
+  color: #d6beaa;
+  border-top: 1px solid rgba(224, 159, 102, 0.3);
+}
+
+/* Barra de filtros del catálogo: se desliza en horizontal en celulares */
+.filtros-catalogo {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding-bottom: 4px;
+}
+.filtros-catalogo .btn {
+  white-space: nowrap;
+}

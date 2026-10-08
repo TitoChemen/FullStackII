@@ -1,0 +1,1012 @@
+
+/* =========================================================
+   VETERINARIA SAN MARCOS
+   ESTILOS GLOBALES
+   Compatible con Bootstrap 5
+   ========================================================= */
+
+
+/* =========================================================
+   1. VARIABLES GLOBALES
+   ========================================================= */
+
+:root {
+    --bg-caramel: linear-gradient(
+        135deg,
+        #2b1a17 0%,
+        #3d2520 50%,
+        #1c100e 100%
+    );
+
+    --bg-dark: #140b09;
+    --bg-dark-soft: rgba(20, 11, 9, 0.95);
+
+    --card-bg: rgba(43, 26, 23, 0.92);
+    --card-border: rgba(224, 159, 102, 0.35);
+
+    --text-main: #fbf8f5;
+    --text-muted: #e2d2c4;
+    --text-dark: #2b1a17;
+
+    --dulce-de-leche: #d97706;
+    --dulce-hover: #b45309;
+
+    --caramel-accent: #f59e0b;
+
+    --green: #15803d;
+    --green-hover: #166534;
+
+    --red: #dc2626;
+    --red-hover: #b91c1c;
+
+    --input-bg: rgba(20, 11, 9, 0.95);
+
+    --shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+
+    --radius: 10px;
+}
+
+
+/* =========================================================
+   2. CONFIGURACIÓN GENERAL
+   ========================================================= */
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+
+    margin: 0;
+
+    background: var(--bg-caramel);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    font-family:
+        'Segoe UI',
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+
+    color: var(--text-main) !important;
+}
+
+
+/* Todos los textos principales */
+
+p,
+label,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+li,
+dt,
+dd,
+legend {
+    color: var(--text-main);
+}
+
+
+/* Texto secundario */
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+
+/* Links */
+
+a {
+    color: var(--caramel-accent);
+    text-decoration: none;
+}
+
+a:hover {
+    color: #fbbf24;
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   3. CONTENEDORES
+   ========================================================= */
+
+.container,
+.container-fluid {
+    position: relative;
+}
+
+
+/* =========================================================
+   4. TARJETAS
+   ========================================================= */
+
+.card {
+    background-color: var(--card-bg) !important;
+
+    border: 1px solid var(--card-border) !important;
+
+    border-radius: var(--radius);
+
+    backdrop-filter: blur(5px);
+
+    color: var(--text-main) !important;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+/* Hover solamente en dispositivos que realmente tienen hover */
+
+@media (hover: hover) {
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+
+}
+
+
+/* Títulos dentro de tarjetas */
+
+.card-title {
+    color: var(--caramel-accent) !important;
+}
+
+.card-text {
+    color: var(--text-main) !important;
+}
+
+
+/* =========================================================
+   5. FORMULARIOS
+   ========================================================= */
+
+.form-label {
+    color: var(--text-muted) !important;
+
+    font-weight: 600;
+}
+
+
+/* Inputs */
+
+.form-control,
+.form-select,
+.form-check-input,
+textarea {
+    background-color: var(--input-bg) !important;
+
+    border: 1px solid var(--card-border) !important;
+
+    color: #ffffff !important;
+
+    border-radius: 6px;
+}
+
+
+/* Placeholder */
+
+.form-control::placeholder,
+textarea::placeholder {
+    color: #bfaea0 !important;
+
+    opacity: 1;
+}
+
+
+/* Focus */
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus {
+    background-color: var(--input-bg) !important;
+
+    border-color: var(--caramel-accent) !important;
+
+    color: #ffffff !important;
+
+    box-shadow:
+        0 0 0 0.25rem rgba(245, 158, 11, 0.25) !important;
+
+    outline: none;
+}
+
+
+/* Select */
+
+.form-select {
+    color: #ffffff !important;
+}
+
+
+/* Opciones del select */
+
+.form-select option {
+    background-color: var(--bg-dark);
+
+    color: #ffffff;
+}
+
+
+/* Texto de ayuda */
+
+.form-text {
+    color: var(--text-muted) !important;
+}
+
+
+/* Checkbox */
+
+.form-check-label {
+    color: var(--text-main) !important;
+}
+
+.form-check-input {
+    background-color: var(--input-bg) !important;
+}
+
+.form-check-input:checked {
+    background-color: var(--dulce-de-leche) !important;
+
+    border-color: var(--dulce-de-leche) !important;
+}
+
+
+/* =========================================================
+   6. BOTONES
+   ========================================================= */
+
+/* Botón principal */
+
+.btn-primary,
+.btn-primario,
+.btn-dulce,
+button[onclick*="Login"],
+button[onclick*="Registro"] {
+    background-color: var(--dulce-de-leche) !important;
+
+    border-color: var(--dulce-de-leche) !important;
+
+    color: #ffffff !important;
+}
+
+
+/* Hover */
+
+.btn-primary:hover,
+.btn-primario:hover,
+.btn-dulce:hover,
+button[onclick*="Login"]:hover,
+button[onclick*="Registro"]:hover {
+    background-color: var(--dulce-hover) !important;
+
+    border-color: var(--dulce-hover) !important;
+
+    color: #ffffff !important;
+}
+
+
+/* Botón secundario */
+
+.btn-secondary,
+.btn-secundario,
+a.btn-secundario {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+
+    border: 1px solid var(--card-border) !important;
+
+    color: var(--text-main) !important;
+}
+
+
+.btn-secondary:hover,
+.btn-secundario:hover,
+a.btn-secundario:hover {
+    background-color: rgba(255, 255, 255, 0.20) !important;
+
+    border-color: var(--caramel-accent) !important;
+
+    color: var(--caramel-accent) !important;
+}
+
+
+/* Botón verde */
+
+.btn-success,
+.btn-reserva {
+    background-color: var(--green) !important;
+
+    border-color: var(--green) !important;
+
+    color: #ffffff !important;
+}
+
+
+.btn-success:hover,
+.btn-reserva:hover {
+    background-color: var(--green-hover) !important;
+
+    border-color: var(--green-hover) !important;
+
+    color: #ffffff !important;
+}
+
+
+/* Botón peligro / eliminar */
+
+.btn-danger,
+.btn-peligro,
+.btn-peligro-out {
+    background-color: var(--red) !important;
+
+    border-color: var(--red) !important;
+
+    color: #ffffff !important;
+}
+
+
+.btn-danger:hover,
+.btn-peligro:hover,
+.btn-peligro-out:hover {
+    background-color: var(--red-hover) !important;
+
+    border-color: var(--red-hover) !important;
+
+    color: #ffffff !important;
+}
+
+
+/* Botones outline */
+
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-danger,
+.btn-outline-warning {
+    color: var(--text-main) !important;
+}
+
+
+/* =========================================================
+   7. NAVBAR
+   ========================================================= */
+
+.navbar,
+.navbar-sanmarcos {
+    background-color: var(--bg-dark-soft) !important;
+
+    border-bottom: 1px solid var(--card-border);
+
+    backdrop-filter: blur(8px);
+}
+
+
+/* Marca */
+
+.navbar-brand {
+    color: var(--text-main) !important;
+
+    font-weight: 700;
+}
+
+
+.navbar-brand:hover {
+    color: var(--caramel-accent) !important;
+
+    text-decoration: none;
+}
+
+
+/* Links */
+
+.navbar .nav-link {
+    color: var(--text-muted) !important;
+
+    transition: color 0.2s ease;
+}
+
+
+.navbar .nav-link:hover {
+    color: var(--caramel-accent) !important;
+}
+
+
+.navbar .nav-link.active {
+    color: var(--caramel-accent) !important;
+
+    font-weight: 600;
+}
+
+
+/* Iconos */
+
+.navbar i,
+.navbar .material-icons {
+    color: inherit;
+}
+
+
+/* Botón hamburguesa */
+
+.navbar-toggler {
+    border: 1px solid var(--card-border) !important;
+}
+
+
+.navbar-toggler:focus {
+    box-shadow:
+        0 0 0 0.2rem rgba(245, 158, 11, 0.25) !important;
+}
+
+
+/* Icono hamburguesa */
+
+.navbar-toggler-icon {
+    filter: invert(1);
+}
+
+
+/* =========================================================
+   8. TABLAS
+   ========================================================= */
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-main);
+
+    color: var(--text-main) !important;
+
+    margin-bottom: 0;
+}
+
+
+/* Encabezado */
+
+.table thead,
+.tabla-sanmarcos thead {
+    background-color: rgba(20, 11, 9, 0.95) !important;
+}
+
+
+.table thead th,
+.tabla-sanmarcos thead th {
+    color: var(--caramel-accent) !important;
+
+    border-color: var(--card-border) !important;
+
+    font-weight: 600;
+}
+
+
+/* Celdas */
+
+.table td,
+.table th,
+.tabla-sanmarcos td,
+.tabla-sanmarcos th {
+    background-color: transparent !important;
+
+    color: var(--text-main) !important;
+
+    border-color: var(--card-border) !important;
+}
+
+
+/* Filas */
+
+.table tbody tr,
+.tabla-sanmarcos tbody tr {
+    background-color: transparent !important;
+}
+
+
+/* Hover de filas */
+
+.table-hover tbody tr:hover,
+.tabla-sanmarcos tbody tr:hover {
+    background-color: rgba(245, 158, 11, 0.08) !important;
+}
+
+
+/* =========================================================
+   9. BADGES / ETIQUETAS
+   ========================================================= */
+
+.badge {
+    color: #ffffff !important;
+}
+
+
+/* Badge principal */
+
+.bg-primary {
+    background-color: var(--dulce-de-leche) !important;
+}
+
+
+/* Badge verde */
+
+.bg-success {
+    background-color: var(--green) !important;
+}
+
+
+/* Badge rojo */
+
+.bg-danger {
+    background-color: var(--red) !important;
+}
+
+
+/* Badge amarillo */
+
+.bg-warning {
+    background-color: var(--caramel-accent) !important;
+
+    color: var(--text-dark) !important;
+}
+
+
+/* =========================================================
+   10. CHIPS Y ETIQUETAS PROPIAS
+   ========================================================= */
+
+.chip-rol {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    background-color: rgba(245, 158, 11, 0.12);
+
+    border: 1px solid var(--card-border);
+
+    color: var(--caramel-accent) !important;
+
+    font-size: 0.9rem;
+}
+
+
+.etiqueta-modulo {
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background-color: rgba(245, 158, 11, 0.12);
+
+    border: 1px solid var(--card-border);
+
+    color: var(--caramel-accent) !important;
+
+    font-size: 0.85rem;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   11. ENCABEZADOS DE SECCIÓN
+   ========================================================= */
+
+.encabezado-seccion {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 10px;
+}
+
+
+.encabezado-seccion h1,
+.encabezado-seccion h2,
+.encabezado-seccion h3,
+.encabezado-seccion h4,
+.encabezado-seccion h5,
+.encabezado-seccion h6 {
+    margin: 0;
+
+    color: var(--text-main) !important;
+}
+
+
+/* =========================================================
+   12. MENSAJES / ALERTAS
+   ========================================================= */
+
+.alert {
+    border-radius: var(--radius);
+
+    color: var(--text-main) !important;
+
+    background-color: var(--card-bg);
+
+    border: 1px solid var(--card-border);
+}
+
+
+/* Alertas Bootstrap */
+
+.alert-success {
+    background-color: rgba(21, 128, 61, 0.18) !important;
+
+    border-color: rgba(21, 128, 61, 0.5) !important;
+
+    color: #bbf7d0 !important;
+}
+
+
+.alert-danger {
+    background-color: rgba(220, 38, 38, 0.18) !important;
+
+    border-color: rgba(220, 38, 38, 0.5) !important;
+
+    color: #fecaca !important;
+}
+
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+
+    border-color: rgba(245, 158, 11, 0.5) !important;
+
+    color: #fde68a !important;
+}
+
+
+.alert-info {
+    background-color: rgba(14, 165, 233, 0.15) !important;
+
+    border-color: rgba(14, 165, 233, 0.4) !important;
+
+    color: #bae6fd !important;
+}
+
+
+/* =========================================================
+   13. MODALES
+   ========================================================= */
+
+.modal-content {
+    background-color: var(--card-bg) !important;
+
+    border: 1px solid var(--card-border) !important;
+
+    color: var(--text-main) !important;
+}
+
+
+.modal-header,
+.modal-footer {
+    border-color: var(--card-border) !important;
+}
+
+
+.modal-title {
+    color: var(--text-main) !important;
+}
+
+
+.btn-close {
+    filter: invert(1);
+
+    opacity: 0.8;
+}
+
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+
+/* =========================================================
+   14. DROPDOWNS
+   ========================================================= */
+
+.dropdown-menu {
+    background-color: var(--bg-dark) !important;
+
+    border: 1px solid var(--card-border) !important;
+
+    box-shadow: var(--shadow);
+}
+
+
+.dropdown-item {
+    color: var(--text-main) !important;
+}
+
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+
+    color: var(--caramel-accent) !important;
+}
+
+
+.dropdown-divider {
+    border-color: var(--card-border) !important;
+}
+
+
+/* =========================================================
+   15. PAGINACIÓN
+   ========================================================= */
+
+.page-link {
+    background-color: var(--card-bg) !important;
+
+    border-color: var(--card-border) !important;
+
+    color: var(--text-main) !important;
+}
+
+
+.page-link:hover {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+
+    color: var(--caramel-accent) !important;
+}
+
+
+.page-item.active .page-link {
+    background-color: var(--dulce-de-leche) !important;
+
+    border-color: var(--dulce-de-leche) !important;
+
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   16. BARRAS DE PROGRESO
+   ========================================================= */
+
+.progress {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+
+.progress-bar {
+    background-color: var(--dulce-de-leche) !important;
+}
+
+
+/* =========================================================
+   17. ESTADO VACÍO
+   ========================================================= */
+
+.estado-vacio {
+    padding: 40px 20px;
+
+    text-align: center;
+
+    color: var(--text-muted) !important;
+}
+
+
+.estado-vacio i {
+    display: block;
+
+    margin-bottom: 10px;
+
+    font-size: 2rem;
+
+    color: var(--caramel-accent) !important;
+}
+
+
+/* =========================================================
+   18. FOOTER
+   ========================================================= */
+
+footer,
+.pie-sanmarcos {
+    background-color: var(--bg-dark-soft) !important;
+
+    color: var(--text-muted) !important;
+
+    border-top: 1px solid var(--card-border);
+}
+
+
+footer *,
+.pie-sanmarcos * {
+    color: inherit;
+}
+
+
+/* =========================================================
+   19. LOGIN / REGISTRO
+   ========================================================= */
+
+.card-auth {
+    width: 100%;
+
+    max-width: 620px;
+
+    margin: 40px auto;
+}
+
+
+.card-auth h1,
+.card-auth h2,
+.card-auth h3,
+.card-auth p,
+.card-auth .marca {
+    color: var(--text-main) !important;
+}
+
+
+.card-auth .text-muted {
+    color: var(--text-muted) !important;
+}
+
+
+.icono-auth {
+    text-align: center;
+
+    font-size: 3rem;
+
+    color: var(--caramel-accent);
+}
+
+
+.icono-auth i {
+    color: inherit;
+}
+
+
+/* =========================================================
+   20. FRANJA SUPERIOR
+   ========================================================= */
+
+.franja-marca {
+    padding: 8px 15px;
+
+    background-color: var(--bg-dark-soft);
+
+    border-bottom: 1px solid var(--card-border);
+
+    color: var(--text-muted) !important;
+
+    font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   21. HERO
+   ========================================================= */
+
+/*
+   Si existe una sección hero en algún HTML,
+   también queda adaptada al tema.
+*/
+
+.hero-section {
+    background: var(--card-bg) !important;
+
+    color: var(--text-main) !important;
+
+    border-bottom: 1px solid var(--card-border);
+}
+
+
+.hero-section h1,
+.hero-section h2,
+.hero-section h3,
+.hero-section p {
+    color: var(--text-main) !important;
+}
+
+
+/* =========================================================
+   22. ICONOS
+   ========================================================= */
+
+.material-icons,
+.bi {
+    color: inherit;
+}
+
+
+/* =========================================================
+   23. TEXTO DE AYUDA PERSONALIZADO
+   ========================================================= */
+
+.form-text-ayuda {
+    color: var(--text-muted) !important;
+
+    font-size: 0.875rem;
+}
+
+
+/* =========================================================
+   24. UTILIDADES BOOTSTRAP QUE PUEDEN ROMPER EL TEMA
+   ========================================================= */
+
+.bg-white {
+    background-color: var(--card-bg) !important;
+}
+
+
+.bg-light {
+    background-color: var(--card-bg) !important;
+}
+
+
+.text-dark {
+    color: var(--text-main) !important;
+}
+
+
+.text-black {
+    color: var(--text-main) !important;
+}
+
+
+/* =========================================================
+   25. RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .encabezado-seccion {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .chip-rol {
+        font-size: 0.8rem;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .card {
+        border-radius: 8px;
+    }
+
+}
+
+
+@media (max-width: 575.98px) {
+
+    .card {
+        padding: 15px !important;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .d-flex .btn {
+        width: auto;
+    }
+
+}
