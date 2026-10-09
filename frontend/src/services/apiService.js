@@ -31,3 +31,108 @@ export const inicializarDatosDemo = () => {
 export const getServicios = () => JSON.parse(localStorage.getItem(CLAVES.SERVICIOS)) || [];
 export const getCarrito = () => JSON.parse(localStorage.getItem(CLAVES.CARRITO)) || [];
 export const saveCarrito = (carrito) => localStorage.setItem(CLAVES.CARRITO, JSON.stringify(carrito));
+
+// ==========================================
+// MANEJO DE SESIÓN Y SEGURIDAD (RBAC)
+// ==========================================
+export const getUsuarioLogueado = () => {
+  return JSON.parse(localStorage.getItem(CLAVES.SESION)) || null;
+};
+
+export const iniciarSesion = (usuario) => {
+  localStorage.setItem(CLAVES.SESION, JSON.stringify(usuario));
+};
+
+export const cerrarSesion = () => {
+  localStorage.removeItem(CLAVES.SESION);
+};
+
+// ==========================================
+// CRUD: GESTIÓN DE USUARIOS (Para Usuarios.jsx)
+// ==========================================
+export const getUsuarios = () => {
+  return JSON.parse(localStorage.getItem(CLAVES.USUARIOS)) || [];
+};
+
+export const actualizarRolUsuario = (idUsuario, nuevoRol) => {
+  const usuarios = getUsuarios();
+  const index = usuarios.findIndex(u => u.id === idUsuario);
+  
+  if (index !== -1) {
+    usuarios[index].rol = nuevoRol;
+    localStorage.setItem(CLAVES.USUARIOS, JSON.stringify(usuarios));
+    return true;
+  }
+  return false;
+};
+
+// ==========================================
+// CRUD: GESTIÓN DE CITAS (Para Admin.jsx)
+// ==========================================
+export const getCitas = () => {
+  return JSON.parse(localStorage.getItem(CLAVES.CITAS)) || [];
+};
+
+export const confirmarCita = (idCita) => {
+  const citas = getCitas();
+  const index = citas.findIndex(c => c.id === idCita);
+  
+  if (index !== -1) {
+    citas[index].estado = 'CONFIRMADA'; // Cambia el estado
+    localStorage.setItem(CLAVES.CITAS, JSON.stringify(citas));
+    return true;
+  }
+  return false;
+};
+
+// ==========================================
+// CRUD: FICHAS CLÍNICAS (Para Fichas.jsx)
+// ==========================================
+export const getPacientes = () => {
+  return JSON.parse(localStorage.getItem(CLAVES.PACIENTES)) || [];
+};
+
+export const guardarFicha = (nuevaFicha) => {
+  const pacientes = getPacientes();
+  // Agregamos un ID único simulado con la fecha
+  const fichaConId = { ...nuevaFicha, id: Date.now(), historial: [] }; 
+  pacientes.push(fichaConId);
+  localStorage.setItem(CLAVES.PACIENTES, JSON.stringify(pacientes));
+  return fichaConId;
+};
+
+export const registrarDiagnostico = (idPaciente, nuevoDiagnostico) => {
+  const pacientes = getPacientes();
+  const index = pacientes.findIndex(p => p.id === idPaciente);
+  
+  if (index !== -1) {
+    // Si no tiene historial previo, lo creamos vacío y pusheamos
+    if (!pacientes[index].historial) pacientes[index].historial = [];
+    pacientes[index].historial.push({
+      fecha: new Date().toISOString().split('T')[0],
+      detalle: nuevoDiagnostico
+    });
+    
+    localStorage.setItem(CLAVES.PACIENTES, JSON.stringify(pacientes));
+    return true;
+  }
+  return false;
+};
+
+// Puedes exportar todo como un objeto por defecto al final si prefieres importarlo más limpio:
+export default {
+  inicializarDatosDemo,
+  getServicios,
+  getCarrito,
+  saveCarrito,
+  getUsuarioLogueado,
+  iniciarSesion,
+  cerrarSesion,
+  getUsuarios,
+  actualizarRolUsuario,
+  getCitas,
+  confirmarCita,
+  getPacientes,
+  guardarFicha,
+  registrarDiagnostico
+};
