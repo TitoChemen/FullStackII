@@ -14,9 +14,9 @@ Este proyecto consiste en la modernización de la plataforma web de la veterinar
 🧪 Pruebas automatizadas: suite de 10 pruebas unitarias con Vitest y React Testing Library.
 🛠️ Integrantes y división del trabajo
 Integrante	Responsabilidades
-Kevin	Integración de la arquitectura React SPA, enrutamiento dinámico, centralización de estilos (estilos.css), implementación de RBAC, gestión del catálogo de servicios y citas, y configuración del entorno de pruebas.
-Jaime	Maquetación de las vistas públicas (Home, Contacto), desarrollo de formularios responsivos y validaciones de interfaz.
-Oscar	Desarrollo e integración del panel administrativo (Admin, Fichas, Usuarios), refactorización de la autenticación (Login, Registro) y persistencia de datos en localStorage.
+Kevin (Lider y cerebro del grupo)	Integración de la arquitectura React SPA, enrutamiento dinámico, centralización de estilos (estilos.css), implementación de RBAC, gestión del catálogo de servicios y citas, y configuración del entorno de pruebas.
+Jaime (Plebeyo inferior)	Maquetación de las vistas públicas (Home, Contacto), desarrollo de formularios responsivos y validaciones de interfaz.
+Oscar (Plebeyo con Aura)	Desarrollo e integración del panel administrativo (Admin, Fichas, Usuarios), refactorización de la autenticación (Login, Registro) y persistencia de datos en localStorage.
 🚀 Tecnologías utilizadas
 Tecnología	Uso
 React 19	Desarrollo de interfaces y componentes.
@@ -138,5 +138,6 @@ El proyecto también busca reforzar las buenas prácticas de desarrollo frontend
 En desarrollo.
 
 Las funcionalidades y los permisos descritos corresponden a la implementación del proyecto y deben validarse contra la versión actual del código fuente.
+Mas detalle de lenguaje en: https://docs.google.com/document/d/18Qsefiq1H39BPjkJoCJ23xMYHKN6enzIk0HKymDoD6E/edit?usp=sharing
 
 Desarrollado con ❤️ por el equipo de Veterinaria San Marcos — Rancagua, Chile. 🐾
