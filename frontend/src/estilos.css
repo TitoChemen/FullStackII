@@ -1010,3 +1010,74 @@ footer *,
     }
 
 }
+
+
+/* =========================================================
+   FIX DEFINITIVO DE CONTRASTE Y VISIBILIDAD DE TEXTOS
+   ========================================================= */
+
+/* Fondo general de la app */
+body {
+  background-color: #1c1815 !important;
+  color: #f8f9fa !important;
+}
+
+/* Forzar que todos los subtextos atenuados (.text-muted) sean blanco suave */
+.text-muted, 
+p.text-muted, 
+span.text-muted, 
+small.text-muted,
+.header-info p,
+.header-info small {
+  color: #d1d5db !important;
+}
+
+/* Textos generales y párrafos */
+p, span, label, td, th {
+  color: #e5e7eb;
+}
+
+/* Títulos principales */
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff;
+}
+
+/* Enlaces del Header / Navbar */
+a {
+  color: #ffc107;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #ffe082;
+}
+
+.nav-link {
+  color: #e5e7eb !important;
+}
+
+.nav-link:hover, 
+.nav-link.active {
+  color: #ffc107 !important;
+}
+
+/* Tarjetas y contenedores claros/oscuros */
+.card {
+  background-color: #28231f !important;
+  border: 1px solid #3d352e !important;
+  color: #ffffff !important;
+}
+
+.card .text-muted {
+  color: #b0b7c0 !important;
+}
+
+/* Tablas */
+.table {
+  color: #f8f9fa !important;
+}
+
+.table-light, .table-light th, .table-light td {
+  background-color: #28231f !important;
+  color: #ffffff !important;
+}

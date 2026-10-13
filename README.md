@@ -1,54 +1,142 @@
-# 🐾 Veterinaria San Marcos 
+🐾 Veterinaria San Marcos — Portal Web & Sistema RBAC
+Bienvenidos al repositorio oficial de Veterinaria San Marcos, ubicada en Rancagua, Chile.
 
-Bienvenidos al repositorio oficial de la **Veterinaria San Marcos** (Rancagua). Este proyecto une el trabajo de todo el equipo en una sola plataforma web impecable, combinando la vitrina pública, el catálogo con carrito de horas y un panel de administración interno con seguridad por roles.
+Este proyecto consiste en la modernización de la plataforma web de la veterinaria mediante una Single Page Application (SPA) desarrollada con React y Vite. Incorpora una interfaz responsiva, navegación dinámica, gestión de usuarios y un sistema de control de acceso basado en roles (RBAC), además de pruebas unitarias para verificar el funcionamiento de los principales componentes y las restricciones de acceso.
 
----
+📌 Características principales
+⚛️ Arquitectura SPA: navegación fluida mediante React Router DOM.
+🔐 Control de acceso RBAC: permisos diferenciados según el rol del usuario.
+👥 Gestión de usuarios: administración de cuentas y roles autorizados.
+📅 Gestión de citas: visualización y confirmación de citas pendientes.
+🩺 Fichas clínicas: creación, consulta y registro de diagnósticos según los permisos.
+📱 Diseño responsivo: interfaz adaptable a distintos tamaños de pantalla.
+💾 Persistencia local: almacenamiento de datos y sesión mediante localStorage.
+🧪 Pruebas automatizadas: suite de 10 pruebas unitarias con Vitest y React Testing Library.
+🛠️ Integrantes y división del trabajo
+Integrante	Responsabilidades
+Kevin	Integración de la arquitectura React SPA, enrutamiento dinámico, centralización de estilos (estilos.css), implementación de RBAC, gestión del catálogo de servicios y citas, y configuración del entorno de pruebas.
+Jaime	Maquetación de las vistas públicas (Home, Contacto), desarrollo de formularios responsivos y validaciones de interfaz.
+Oscar	Desarrollo e integración del panel administrativo (Admin, Fichas, Usuarios), refactorización de la autenticación (Login, Registro) y persistencia de datos en localStorage.
+🚀 Tecnologías utilizadas
+Tecnología	Uso
+React 19	Desarrollo de interfaces y componentes.
+Vite	Servidor de desarrollo y herramientas de compilación.
+React Router DOM 7	Enrutamiento y navegación entre vistas.
+Bootstrap 5.3	Diseño y componentes responsivos.
+Bootstrap Icons	Iconografía de la interfaz.
+Vitest	Ejecución de pruebas unitarias.
+React Testing Library	Pruebas de componentes e interacciones.
+JSDOM	Simulación del entorno DOM para las pruebas.
+JavaScript ES6+	Lógica de la aplicación y manejo de datos.
+localStorage	Persistencia local de información y sesión.
+📂 Estructura del proyecto
+La aplicación se organiza de manera modular dentro de la carpeta frontend/.
 
-## 🛠️ ¿Quién hizo qué? (División del equipo)
+frontend/
+├── src/
+│   ├── components/           # Componentes reutilizables
+│   ├── pages/                # Vistas principales de la aplicación
+│   │   ├── Home              # Página de inicio
+│   │   ├── Contacto          # Información de contacto
+│   │   ├── Admin             # Panel administrativo
+│   │   ├── Fichas            # Gestión de fichas clínicas
+│   │   ├── Usuarios          # Gestión de usuarios
+│   │   ├── Login             # Inicio de sesión
+│   │   └── Registro          # Registro de usuarios
+│   ├── services/
+│   │   └── apiService        # Servicios y persistencia local
+│   ├── App.test.jsx          # Pruebas unitarias
+│   ├── setupTests.js         # Configuración del entorno de pruebas
+│   ├── App.css               # Estilos de la aplicación
+│   ├── estilos.css            # Estilos centralizados
+│   └── main.jsx              # Punto de entrada
+├── vite.config.js            # Configuración de Vite y Vitest
+└── package.json              # Dependencias y scripts
+Nota: La estructura es referencial. Los nombres y las rutas exactas deben coincidir con los archivos existentes en el repositorio.
 
-* **Kevin:** Integración general, diseño y unificación de estilos (*Caramel & Dulce de Leche*), desarrollo del catálogo de servicios con carrito/citas (`agendar.html`), y la unificación de los flujos de navegación y ruteo entre los distintos módulos.
-* **Jaime:** Maquetación y estructura de la portada principal (`index.html`) y la sección de contacto (`contacto.html`) con su respectiva validación de formularios (`funcionesJ.js`).
-* **Oscar:** Desarrollo del sistema administrativo completo (`admin.html`, `login.html`, `registro.html`, `usuarios.html`, `ficha-veterinaria.html`) y el motor de almacenamiento local con control de roles (`funciones.js`).
+🔐 Sistema de control de acceso basado en roles (RBAC)
+El sistema establece diferentes niveles de acceso según el rol asignado a cada usuario.
 
----
+Permisos por rol
+Funcionalidad	Administrador	Recepcionista	Veterinario
+Gestión de citas	✅	✅	✅
+Consulta y gestión de fichas clínicas	✅	✅	✅
+Registro de diagnósticos	✅	Según permisos	✅
+Gestión de usuarios	✅	❌	❌
+👤 Credenciales de prueba
+Las siguientes cuentas permiten probar los distintos niveles de acceso del portal interno.
 
-## 📂 Estructura del Proyecto
+Rol	Correo electrónico	Contraseña
+Administrador	admin@sanmarcos.cl	Admin2026
+Recepcionista	recepcion@sanmarcos.cl	Recepcion2026
+Veterinario	veterinario@sanmarcos.cl	Vet2026a
+Importante: Estas credenciales están destinadas exclusivamente al entorno de demostración. No utilices contraseñas reales ni publiques credenciales de producción en el repositorio. Si las cuentas siguen activas en un entorno accesible públicamente, reemplázalas por cuentas de prueba aisladas.
 
-El proyecto está ordenado de forma modular para que no se nos enrede nada:
+Consideración de seguridad: El uso de localStorage y de controles RBAC implementados únicamente en el frontend no constituye una protección suficiente para datos clínicos reales. En producción, los permisos deben validarse también en el backend y la información sensible debe protegerse adecuadamente.
 
-* 🏠 `index.html`: La portada oficial con la identidad de la clínica y accesos directos.
-* 🛒 `agendar.html`: Catálogo interactivo de especialidades médicas con gestión de citas.
-* ✉️ `contacto.html`: Formulario de consultas y mapa de ubicación.
-* 🔐 `login.html` & `registro.html`: Módulos de acceso y creación de cuentas.
-* ⚙️ `admin.html`: Panel para que recepción gestione las citas entrantes.
-* 📋 `ficha-veterinaria.html`: Historiales clínicos, diagnósticos y vacunas de los regalones.
-* 👥 `usuarios.html`: Gestión de personal exclusiva para administradores.
-* 🎨 `css/estilos.css`: Nuestra hoja de estilos centralizada con la facha gourmet.
-* 📜 `js/`: Los scripts de lógica (`carrito.js`, `servicios.js`, `funcionesJ.js` y el motor `funciones.js`).
+🧪 Pruebas unitarias
+El proyecto incorpora una suite de 10 pruebas unitarias desarrolladas con Vitest, React Testing Library y JSDOM.
 
----
+Las pruebas están orientadas a verificar el renderizado de componentes, las interacciones con formularios y el cumplimiento de las restricciones de acceso por rol.
 
-## 🚀 Tecnologías que usamos
+Casos de prueba
+Renderizado de la tabla de citas en Admin.jsx.
+Confirmación de citas pendientes.
+Visualización de la sesión activa en el Navbar.
+Renderizado del formulario de fichas clínicas.
+Control de estados en los campos de los formularios.
+Restricción de acceso a Usuarios.jsx para roles no autorizados.
+Acceso permitido a Usuarios.jsx para el rol ADMINISTRADOR.
+Renderizado correcto de las tablas de gestión.
+Ocultamiento dinámico de elementos de navegación según el rol activo.
+Renderizado del menú administrativo en distintos tamaños de pantalla.
+Ejecutar las pruebas
+Desde la carpeta frontend/, ejecuta el siguiente comando:
 
-* **Frontend:** HTML5 semántico, CSS3 personalizado y Bootstrap 5.3.
-* **Iconografía y Fuentes:** Bootstrap Icons, Material Icons y Google Fonts (*Open Sans*).
-* **Lógica y Datos:** JavaScript moderno (ES6+), jQuery 3.7.1 y `localStorage` para simular la base de datos de usuarios y citas.
+npm test
+Este comando ejecuta las pruebas configuradas en el proyecto. La cobertura de código debe verificarse por separado si no existe un comando específico para generarla.
 
----
+💻 Instalación y ejecución local
+Requisitos previos
+Node.js: una versión compatible con las dependencias del proyecto.
+npm: incluido con Node.js.
+Git: para clonar el repositorio.
+1. Clonar el repositorio
+git clone <URL_DEL_REPOSITORIO>
+Reemplaza <URL_DEL_REPOSITORIO> por la URL real del repositorio de GitHub.
 
-## 🔑 Credenciales de Prueba (Portal Médico)
+2. Ingresar a la carpeta del frontend
+cd frontend
+Si el frontend se encuentra dentro de otra carpeta, ingresa primero a la raíz del repositorio.
 
-Para revisar los distintos niveles de permisos por dentro, pásale estas cuentas al profe:
+3. Instalar las dependencias
+npm install
+4. Iniciar el servidor de desarrollo
+npm run dev
+5. Abrir la aplicación
+Vite mostrará en la consola la dirección local de la aplicación. Por defecto, suele ser:
 
-* **Administrador:** `admin@sanmarcos.cl` / `Admin2026`
-* **Recepcionista:** `recepcion@sanmarcos.cl` / `Recepcion2026`
-* **Veterinario:** `veterinario@sanmarcos.cl` / `Vet2026a`
+http://localhost:5173
 
----
+Abre esa dirección en tu navegador para comenzar a utilizar el portal.
 
-## 💻 ¿Cómo correrlo localmente?
+📋 Scripts disponibles
+Los comandos disponibles dependen de la configuración de package.json.
 
-1. Clona el repositorio y ponte en la rama de entrega EV!.
-2. Abre la carpeta en tu editor favorito (como VS Code).
-3. Levanta un servidor local (por ejemplo, con la extensión *Live Server*) para que el `localStorage` y los scripts corran sin atados de seguridad.
-4. Abre `index.html` y ¡a navegar se ha dicho!
+Comando	Descripción
+npm install	Instala las dependencias del proyecto.
+npm run dev	Inicia el servidor de desarrollo de Vite.
+npm test	Ejecuta la suite de pruebas unitarias, si está configurado.
+npm run build	Genera la versión de producción, si está configurado.
+npm run preview	Permite previsualizar la compilación local, si está configurado.
+🎯 Objetivo del proyecto
+Desarrollar una plataforma web moderna, accesible y modular para Veterinaria San Marcos, facilitando la gestión de citas, fichas clínicas y usuarios mediante una interfaz responsiva y una administración de permisos diferenciada por roles.
+
+El proyecto también busca reforzar las buenas prácticas de desarrollo frontend mediante la separación de componentes, la organización del código y la incorporación de pruebas automatizadas.
+
+📄 Estado del proyecto
+En desarrollo.
+
+Las funcionalidades y los permisos descritos corresponden a la implementación del proyecto y deben validarse contra la versión actual del código fuente.
+
+Desarrollado con ❤️ por el equipo de Veterinaria San Marcos — Rancagua, Chile. 🐾

@@ -3,29 +3,38 @@ import { Layout } from '../components/Layout';
 import { inicializarDatosDemo, getServicios } from '../services/apiService';
 import { useCarrito } from '../hooks/useCarrito';
 
-const formatoCLP = (n) => `$${n.toLocaleString('es-CL')}`;
+const formatoCLP = (n) => `$${(n || 0).toLocaleString('es-CL')}`;
 
-export const Agendar = () => {
+export default function Agendar() {
   const [servicios] = useState(() => {
-    inicializarDatosDemo();
-    return getServicios();
+    if (typeof inicializarDatosDemo === 'function') inicializarDatosDemo();
+    return typeof getServicios === 'function' ? getServicios() || [] : [];
   });
   const [categoria, setCategoria] = useState('Todos');
   const [verCarrito, setVerCarrito] = useState(false);
   const [aviso, setAviso] = useState('');
-  const { carrito, agregar, cambiarCantidad, eliminar, vaciar, cantidadTotal, total } = useCarrito();
+  
+  // Custom hook del carrito
+  const carritoHook = useCarrito ? useCarrito() : {};
+  const { 
+    carrito = [], 
+    agregar = () => {}, 
+    cambiarCantidad = () => {}, 
+    eliminar = () => {}, 
+    vaciar = () => {}, 
+    cantidadTotal = 0, 
+    total = 0 
+  } = carritoHook;
 
-  const categorias = ['Todos', ...new Set(servicios.map((s) => s.categoria))];
-  const visibles = categoria === 'Todos' ? servicios : servicios.filter((s) => s.categoria === categoria);
+  const categorias = ['Todos', ...new Set((servicios || []).map((s) => s.categoria).filter(Boolean))];
+  const visibles = categoria === 'Todos' ? (servicios || []) : (servicios || []).filter((s) => s.categoria === categoria);
 
-  // El aviso desaparece solo a los 3 segundos
   useEffect(() => {
     if (!aviso) return;
     const t = setTimeout(() => setAviso(''), 3000);
     return () => clearTimeout(t);
   }, [aviso]);
 
-  // Cerrar el carrito con Escape
   useEffect(() => {
     if (!verCarrito) return;
     const onKey = (e) => e.key === 'Escape' && setVerCarrito(false);
@@ -47,7 +56,7 @@ export const Agendar = () => {
         </div>
 
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-          <div className="d-flex gap-2 filtros-catalogo" role="group" aria-label="Filtrar por categoría">
+          <div className="d-flex gap-2 filtros-catalogo flex-wrap" role="group" aria-label="Filtrar por categoría">
             {categorias.map((c) => (
               <button
                 key={c}
@@ -60,16 +69,16 @@ export const Agendar = () => {
             ))}
           </div>
           <button type="button" className="btn btn-outline-warning position-relative" onClick={() => setVerCarrito(true)}>
-            <i className="bi bi-calendar-check"></i> Mis citas
+            <i className="bi bi-calendar-check me-1"></i> Mis citas
             <span className="badge rounded-pill bg-danger ms-2">{cantidadTotal}</span>
           </button>
         </div>
 
         <div className="row">
           {visibles.map((s) => (
-            <div key={s.id} className="col-12 col-sm-6 col-lg-4 mb-4">
+            <div key={s.id || s.nombre} className="col-12 col-sm-6 col-lg-4 mb-4">
               <div className="card h-100 shadow">
-                <img src={s.imagen} className="card-img-top" alt={s.nombre} style={{ height: 200, objectFit: 'cover' }} />
+                {s.imagen && <img src={s.imagen} className="card-img-top" alt={s.nombre} style={{ height: 200, objectFit: 'cover' }} />}
                 <div className="card-body d-flex flex-column">
                   <span className="badge bg-warning text-dark align-self-start mb-2">{s.categoria}</span>
                   <h5 className="card-title text-warning fw-bold">{s.nombre}</h5>
@@ -78,7 +87,7 @@ export const Agendar = () => {
                 </div>
                 <div className="card-footer bg-transparent border-top-0 d-grid">
                   <button type="button" className="btn btn-warning text-dark fw-bold" onClick={() => handleAgregar(s)}>
-                    <i className="bi bi-calendar-plus"></i> Agendar hora
+                    <i className="bi bi-calendar-plus me-1"></i> Agendar hora
                   </button>
                 </div>
               </div>
@@ -100,7 +109,7 @@ export const Agendar = () => {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title text-warning" id="titulo-carrito">
-                    <i className="bi bi-calendar-check"></i> Mis citas solicitadas
+                    <i className="bi bi-calendar-check me-1"></i> Mis citas solicitadas
                   </h5>
                   <button type="button" className="btn-close btn-close-white" aria-label="Cerrar" onClick={() => setVerCarrito(false)}></button>
                 </div>
@@ -123,7 +132,7 @@ export const Agendar = () => {
                           {carrito.map((item) => (
                             <tr key={item.id}>
                               <td>
-                                <img src={item.imagen} alt="" width="40" height="40" className="me-2 rounded" style={{ objectFit: 'cover' }} />
+                                {item.imagen && <img src={item.imagen} alt="" width="40" height="40" className="me-2 rounded" style={{ objectFit: 'cover' }} />}
                                 {item.nombre}
                               </td>
                               <td>{formatoCLP(item.precio)}</td>
@@ -166,4 +175,4 @@ export const Agendar = () => {
       )}
     </Layout>
   );
-};
+}

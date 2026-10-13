@@ -11,10 +11,12 @@ const ICONOS = {
   'Quirúrgica': 'bi-scissors',
 };
 
-export const Home = () => {
+export default function Home() {
   const [servicios] = useState(() => {
-    inicializarDatosDemo();
-    return getServicios();
+    if (typeof inicializarDatosDemo === 'function') {
+      inicializarDatosDemo();
+    }
+    return typeof getServicios === 'function' ? getServicios() || [] : [];
   });
 
   return (
@@ -39,20 +41,24 @@ export const Home = () => {
           <p className="text-muted">Atención integral para el bienestar de tu mascota</p>
         </div>
         <div className="row g-4 text-center">
-          {servicios.map((s) => (
-            <div key={s.id} className="col-12 col-md-6 col-lg-4">
-              <div className="card h-100 shadow-sm border-0">
-                <div className="card-body p-4 d-flex flex-column align-items-center">
-                  <i className={`bi ${ICONOS[s.categoria] || 'bi-heart'} icono-servicio`}></i>
-                  <h4 className="card-title mt-3">{s.nombre}</h4>
-                  <p className="card-text text-muted">{s.descripcion}</p>
-                  <span className="fw-bold text-warning mt-auto">
-                    ${s.precio.toLocaleString('es-CL')}
-                  </span>
+          {servicios && servicios.length > 0 ? (
+            servicios.map((s) => (
+              <div key={s.id || s.nombre} className="col-12 col-md-6 col-lg-4">
+                <div className="card h-100 shadow-sm border-0">
+                  <div className="card-body p-4 d-flex flex-column align-items-center">
+                    <i className={`bi ${ICONOS[s.categoria] || 'bi-heart'} icono-servicio`}></i>
+                    <h4 className="card-title mt-3">{s.nombre}</h4>
+                    <p className="card-text text-muted">{s.descripcion}</p>
+                    <span className="fw-bold text-warning mt-auto">
+                      ${s.precio ? s.precio.toLocaleString('es-CL') : '0'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-center text-muted">No hay servicios disponibles por el momento.</p>
+          )}
         </div>
         <div className="text-center mt-5">
           <Link to="/agendar" className="btn btn-outline-warning">
@@ -86,4 +92,4 @@ export const Home = () => {
       </section>
     </Layout>
   );
-};
+}
