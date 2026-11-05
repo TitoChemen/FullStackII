@@ -1,15 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Importar las páginas de la carpeta pages
-import { Home } from './pages/Home';
-import { Agendar } from './pages/Agendar';
-import { Contacto } from './pages/Contacto';
-import { Login } from './pages/Login';
-import { Registro } from './pages/Registro';
-import { Admin } from './pages/Admin';
-import { Fichas } from './pages/Fichas';
-import { Usuarios } from './pages/Usuarios';
+// Importación directa de páginas (sin llaves para evitar errores de exportación)
+import Home from './pages/Home';
+import Agendar from './pages/Agendar';
+import Contacto from './pages/Contacto';
+import Login from './pages/Login';
+import Registro from './pages/Registro';
+import Admin from './pages/Admin';
+import Fichas from './pages/Fichas';
+import Usuarios from './pages/Usuarios';
+
+import './estilos.css'
 
 export function App() {
   return (
