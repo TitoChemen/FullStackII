@@ -1,0 +1,37 @@
+
+server:
+  port: 8083
+  error:
+    include-stacktrace: never
+    include-message: always
+
+spring:
+  devtools:
+    add-properties: false
+
+  application:
+    name: citas-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/veterinaria_citas
+    username: vet_citas
+    password: ${CITAS_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: veterinaria-san-marcos
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
