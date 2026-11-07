@@ -1,0 +1,37 @@
+# ============================================
+# VETERINARIA SAN MARCOS - EV3
+# Archivos locales y temporales
+# ============================================
+
+# Variables de entorno y credenciales
+.env
+.env.*
+!.env.example
+
+# Logs y procesos locales
+logs/
+.run/
+*.log
+*.pid
+
+# IntelliJ IDEA
+.idea/
+**/.idea/
+*.iml
+
+# Visual Studio Code
+.vscode/
+**/.vscode/
+
+# Java y Maven
+**/target/
+*.class
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Temporales
+*.tmp
+*.bak
+*~
