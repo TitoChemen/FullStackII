@@ -1,129 +1,185 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import BarraInterna from '../components/BarraInterna';
+import { useAuth } from '../context/AuthContext';
+import {
+  listarMascotas,
+  listarUsuarios,
+  citasPorMascota,
+  citasPorVeterinario,
+  cambiarEstadoCita,
+  asignarVeterinario,
+} from '../services/apiService';
+import { ROLES, formatearFechaHora } from '../utils';
 
-const CITAS_DEMO = [
-  { id: 1, dueño: 'Carlos Pérez', mascota: 'Firulais', fecha: '2026-10-15', hora: '10:30', motivo: 'Vacunación', estado: 'PENDIENTE' },
-  { id: 2, dueño: 'María Gómez', mascota: 'Michi', fecha: '2026-10-16', hora: '15:00', motivo: 'Consulta General', estado: 'PENDIENTE' },
-  { id: 3, dueño: 'Juan Silva', mascota: 'Rocky', fecha: '2026-10-18', hora: '11:00', motivo: 'Control Post-Operatorio', estado: 'CONFIRMADA' }
-];
+const COLOR_ESTADO = {
+  PENDIENTE: 'bg-warning text-dark',
+  CONFIRMADA: 'bg-success',
+  EN_CURSO: 'bg-info text-dark',
+  COMPLETADA: 'bg-primary',
+  CANCELADA: 'bg-secondary',
+  NO_ASISTIO: 'bg-danger',
+};
+
+// Transiciones que permite el backend (CitaService.cambiarEstado)
+const TRANSICIONES = {
+  PENDIENTE: [
+    { estado: 'CONFIRMADA', texto: 'Confirmar', clase: 'btn-success text-white', quien: 'personal' },
+    { estado: 'CANCELADA', texto: 'Cancelar', clase: 'btn-outline-danger', quien: 'personal' },
+  ],
+  CONFIRMADA: [
+    { estado: 'EN_CURSO', texto: 'Iniciar atención', clase: 'btn-info', quien: 'atiende' },
+    { estado: 'NO_ASISTIO', texto: 'No asistió', clase: 'btn-outline-secondary', quien: 'personal' },
+    { estado: 'CANCELADA', texto: 'Cancelar', clase: 'btn-outline-danger', quien: 'personal' },
+  ],
+  EN_CURSO: [{ estado: 'COMPLETADA', texto: 'Completar', clase: 'btn-primary', quien: 'atiende' }],
+};
 
 export default function Admin() {
-  const [listaCitas, setListaCitas] = useState([]);
-  const [usuarioActivo, setUsuarioActivo] = useState(null);
-  const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const [citas, setCitas] = useState([]);
+  const [mascotas, setMascotas] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+  const [exito, setExito] = useState('');
+  const [procesando, setProcesando] = useState(null);
+  const [filtro, setFiltro] = useState('TODAS');
+  const [vetAsignar, setVetAsignar] = useState({});
+
+  const esPersonalAdmin = usuario.rol === ROLES.ADMIN || usuario.rol === ROLES.RECEPCION;
+  const esAdmin = usuario.rol === ROLES.ADMIN;
+
+  // No existe un endpoint "listar todas las citas": se consultan las citas de cada mascota
+  // (personal administrativo) o las del veterinario autenticado.
+  const cargar = useCallback(async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const listaMascotas = await listarMascotas();
+      setMascotas(listaMascotas);
+
+      if (esAdmin) {
+        listarUsuarios().then(setUsuarios).catch(() => setUsuarios([]));
+      }
+
+      let todas = [];
+      if (usuario.rol === ROLES.VET) {
+        todas = await citasPorVeterinario(usuario.id);
+      } else {
+        const resultados = await Promise.allSettled(listaMascotas.map((m) => citasPorMascota(m.id)));
+        todas = resultados.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
+        const fallidas = resultados.filter((r) => r.status === 'rejected');
+        if (fallidas.length) {
+          setError(`No se pudieron consultar las citas de ${fallidas.length} mascota(s): ${fallidas[0].reason?.message || 'error'}`);
+        }
+      }
+      todas.sort((a, b) => new Date(b.fechaHoraInicio) - new Date(a.fechaHoraInicio));
+      setCitas(todas);
+    } catch (err) {
+      setError(err.message);
+      setCitas([]);
+    } finally {
+      setCargando(false);
+    }
+  }, [usuario.id, usuario.rol, esAdmin]);
 
   useEffect(() => {
-    // 1. CARGAR SESIÓN DE USUARIO
-    const sesionGuardada = JSON.parse(localStorage.getItem('usuario_logueado') || 'null');
-    const usuario = sesionGuardada || (apiService?.getUsuarioLogueado ? apiService.getUsuarioLogueado() : null);
+    cargar();
+  }, [cargar]);
 
-    setUsuarioActivo(usuario);
+  const mascotaPorId = useMemo(() => Object.fromEntries(mascotas.map((m) => [m.id, m])), [mascotas]);
+  const usuarioPorId = useMemo(() => Object.fromEntries(usuarios.map((u) => [u.id, u])), [usuarios]);
+  const veterinarios = useMemo(() => usuarios.filter((u) => u.rol === ROLES.VET && u.activo), [usuarios]);
 
-    // 2. PROTECCIÓN DE RUTA (Solo Admin, Recepcionista y Veterinario)
-    const rolesPermitidos = ['ADMINISTRADOR', 'RECEPCIONISTA', 'VETERINARIO'];
-    if (!usuario || !rolesPermitidos.includes(usuario.rol)) {
-      alert("Acceso denegado. Inicia sesión con un usuario autorizado.");
-      navigate('/login');
+  const nombreDueno = (mascota) => {
+    if (!mascota) return '—';
+    const u = usuarioPorId[mascota.duenoId];
+    return u ? `${u.nombre} ${u.apellido}` : `Dueño #${mascota.duenoId}`;
+  };
+
+  const nombreVeterinario = (id) => {
+    if (!id) return <span className="text-muted fst-italic">Sin asignar</span>;
+    const u = usuarioPorId[id];
+    return u ? `${u.nombre} ${u.apellido}` : `Veterinario #${id}`;
+  };
+
+  const puedeEjecutar = (accion, cita) => {
+    if (esPersonalAdmin) return true;
+    return accion.quien === 'atiende' && usuario.rol === ROLES.VET && cita.veterinarioId === usuario.id;
+  };
+
+  const handleCambiarEstado = async (cita, estado) => {
+    setProcesando(cita.id);
+    setError('');
+    setExito('');
+    try {
+      await cambiarEstadoCita(cita.id, estado); // el backend decide; no se cambia nada solo en React
+      setExito(`Cita #${cita.id} actualizada a ${estado}.`);
+      await cargar(); // refresca desde el backend
+    } catch (err) {
+      setError(`No se pudo cambiar el estado de la cita #${cita.id}: ${err.message}`);
+    } finally {
+      setProcesando(null);
+    }
+  };
+
+  const handleAsignar = async (cita) => {
+    const id = Number(vetAsignar[cita.id]);
+    if (!id || id <= 0) {
+      setError('Indica un veterinario válido para asignar.');
       return;
     }
-
-    // 3. CARGAR CITAS
-    let datosCitas = apiService?.getCitas ? apiService.getCitas() : null;
-
-    if (!datosCitas || datosCitas.length === 0) {
-      const guardadas = JSON.parse(localStorage.getItem('sanmarcos_citas') || '[]');
-      if (guardadas.length > 0) {
-        datosCitas = guardadas;
-      } else {
-        localStorage.setItem('sanmarcos_citas', JSON.stringify(CITAS_DEMO));
-        datosCitas = CITAS_DEMO;
-      }
-    }
-
-    setListaCitas(datosCitas);
-  }, [navigate]);
-
-  // 4. CONFIRMAR CITA
-  const handleConfirmar = (idCita) => {
-    const actualizadas = listaCitas.map(cita => 
-      cita.id === idCita ? { ...cita, estado: 'CONFIRMADA' } : cita
-    );
-    setListaCitas(actualizadas);
-    localStorage.setItem('sanmarcos_citas', JSON.stringify(actualizadas));
-
-    if (apiService?.confirmarCita) {
-      apiService.confirmarCita(idCita);
+    setProcesando(cita.id);
+    setError('');
+    setExito('');
+    try {
+      await asignarVeterinario(cita.id, id);
+      setExito(`Veterinario asignado a la cita #${cita.id}.`);
+      setVetAsignar((prev) => ({ ...prev, [cita.id]: '' }));
+      await cargar();
+    } catch (err) {
+      setError(`No se pudo asignar el veterinario: ${err.message}`);
+    } finally {
+      setProcesando(null);
     }
   };
 
-  // 5. CERRAR SESIÓN
-  const handleCerrarSesion = () => {
-    localStorage.removeItem('usuario_logueado');
-    navigate('/login');
-  };
+  const visibles = filtro === 'TODAS' ? citas : citas.filter((c) => c.estado === filtro);
 
   return (
     <>
-      {/* ===== NAVBAR RESPONSIVE CON RBAC ===== */}
-      <nav className="navbar navbar-expand-md sticky-top">
-        <div className="container">
-          <Link className="navbar-brand d-flex align-items-center gap-1" to="/admin">
-            <i className="bi bi-paw-fill text-warning me-1"></i> Veterinaria San Marcos
-          </Link>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navPrincipal">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navPrincipal">
-            <ul className="navbar-nav me-auto mt-2 mt-md-0">
-              {/* Citas: Admin, Recepcionista y Veterinario */}
-              {(usuarioActivo?.rol === 'ADMINISTRADOR' || usuarioActivo?.rol === 'RECEPCIONISTA' || usuarioActivo?.rol === 'VETERINARIO') && (
-                <li className="nav-item">
-                  <Link className="nav-link active" to="/admin">
-                    <i className="bi bi-calendar-check me-1"></i> Citas
-                  </Link>
-                </li>
-              )}
+      <BarraInterna activa="citas" />
 
-              {/* Fichas Clínicas: Admin, Recepcionista y Veterinario */}
-              {(usuarioActivo?.rol === 'ADMINISTRADOR' || usuarioActivo?.rol === 'RECEPCIONISTA' || usuarioActivo?.rol === 'VETERINARIO') && (
-                <li className="nav-item">
-                  <Link className="nav-link" to="/fichas">
-                    <i className="bi bi-journal-medical me-1"></i> Fichas clínicas
-                  </Link>
-                </li>
-              )}
-
-              {/* Usuarios: Exclusivo Administrador */}
-              {usuarioActivo?.rol === 'ADMINISTRADOR' && (
-                <li className="nav-item solo-administrador">
-                  <Link className="nav-link" to="/usuarios">
-                    <i className="bi bi-people me-1"></i> Usuarios
-                  </Link>
-                </li>
-              )}
-            </ul>
-            <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-              <span className="chip-rol">
-                <span id="nombreUsuarioActivo">{usuarioActivo ? usuarioActivo.nombre : 'Invitado'}</span> · 
-                <span id="chipRolActivo" className="ms-1">{usuarioActivo ? usuarioActivo.rol : 'SIN ROL'}</span>
-              </span>
-              <button className="btn btn-outline-danger btn-sm" onClick={handleCerrarSesion}>
-                <i className="bi bi-box-arrow-right me-1"></i> Salir
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* ===== CONTENIDO DE CITAS ===== */}
       <div className="container mt-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2>Gestión de Citas</h2>
-          <span className="badge bg-primary">Panel de Administración</span>
+        <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h2 className="mb-0">Gestión de Citas</h2>
+          <span className="badge bg-primary">
+            {usuario.rol === ROLES.VET ? 'Mis citas asignadas' : 'Panel de Administración'}
+          </span>
         </div>
-        
-        <p className="text-muted">Revisa y confirma las horas solicitadas por los pacientes.</p>
+
+        <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <p className="text-muted mb-0 me-auto">
+            Información en tiempo real desde el sistema. Revisa y gestiona las horas solicitadas.
+          </p>
+          <select
+            className="form-select form-select-sm w-auto"
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            aria-label="Filtrar por estado"
+          >
+            <option value="TODAS">Todos los estados</option>
+            {Object.keys(COLOR_ESTADO).map((e) => (
+              <option key={e} value={e}>{e}</option>
+            ))}
+          </select>
+          <button className="btn btn-outline-warning btn-sm" onClick={cargar} disabled={cargando}>
+            <i className="bi bi-arrow-clockwise me-1"></i> Actualizar
+          </button>
+        </div>
+
+        {error && <div className="alert alert-danger" role="alert">{error}</div>}
+        {exito && <div className="alert alert-success" role="status">{exito}</div>}
 
         <div className="card shadow-sm border-0 p-0">
           <div className="table-responsive">
@@ -135,38 +191,92 @@ export default function Admin() {
                   <th>Mascota</th>
                   <th>Fecha y Hora</th>
                   <th>Motivo</th>
+                  <th>Veterinario</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {listaCitas.length > 0 ? (
-                  listaCitas.map(cita => (
-                    <tr key={cita.id}>
-                      <td>#{cita.id}</td>
-                      <td>{cita.dueño}</td>
-                      <td>{cita.mascota}</td>
-                      <td>{cita.fecha} a las {cita.hora}</td>
-                      <td>{cita.motivo}</td>
-                      <td>
-                        <span className={`badge ${cita.estado === 'CONFIRMADA' ? 'bg-success' : 'bg-warning text-dark'}`}>
-                          {cita.estado}
-                        </span>
-                      </td>
-                      <td>
-                        <button 
-                          className="btn btn-sm btn-success text-white fw-bold"
-                          onClick={() => handleConfirmar(cita.id)}
-                          disabled={cita.estado === 'CONFIRMADA'}
-                        >
-                          {cita.estado === 'CONFIRMADA' ? 'Confirmada ✔' : 'Confirmar Cita'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                {cargando ? (
+                  <tr>
+                    <td colSpan="8" className="text-center py-4 text-muted">
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Cargando citas...
+                    </td>
+                  </tr>
+                ) : visibles.length > 0 ? (
+                  visibles.map((cita) => {
+                    const mascota = mascotaPorId[cita.mascotaId];
+                    const acciones = (TRANSICIONES[cita.estado] || []).filter((a) => puedeEjecutar(a, cita));
+                    const puedeAsignar =
+                      esPersonalAdmin && (cita.estado === 'PENDIENTE' || cita.estado === 'CONFIRMADA');
+                    return (
+                      <tr key={cita.id}>
+                        <td>#{cita.id}</td>
+                        <td>{nombreDueno(mascota)}</td>
+                        <td>{mascota ? `${mascota.nombre} (${mascota.especie})` : `Mascota #${cita.mascotaId}`}</td>
+                        <td>{formatearFechaHora(cita.fechaHoraInicio)}</td>
+                        <td>{cita.motivo}</td>
+                        <td>
+                          {nombreVeterinario(cita.veterinarioId)}
+                          {puedeAsignar && (
+                            <div className="d-flex gap-1 mt-1">
+                              {veterinarios.length > 0 ? (
+                                <select
+                                  className="form-select form-select-sm"
+                                  value={vetAsignar[cita.id] || ''}
+                                  onChange={(e) => setVetAsignar({ ...vetAsignar, [cita.id]: e.target.value })}
+                                >
+                                  <option value="">Asignar...</option>
+                                  {veterinarios.map((v) => (
+                                    <option key={v.id} value={v.id}>{v.nombre} {v.apellido}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  type="number"
+                                  min="1"
+                                  className="form-control form-control-sm"
+                                  style={{ width: 90 }}
+                                  placeholder="ID vet."
+                                  value={vetAsignar[cita.id] || ''}
+                                  onChange={(e) => setVetAsignar({ ...vetAsignar, [cita.id]: e.target.value })}
+                                />
+                              )}
+                              <button
+                                className="btn btn-sm btn-outline-warning"
+                                disabled={procesando === cita.id}
+                                onClick={() => handleAsignar(cita)}
+                              >
+                                OK
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <span className={`badge ${COLOR_ESTADO[cita.estado] || 'bg-secondary'}`}>{cita.estado}</span>
+                        </td>
+                        <td>
+                          <div className="d-flex flex-wrap gap-1">
+                            {acciones.length === 0 && <span className="text-muted small">—</span>}
+                            {acciones.map((a) => (
+                              <button
+                                key={a.estado}
+                                className={`btn btn-sm fw-bold ${a.clase}`}
+                                disabled={procesando === cita.id}
+                                onClick={() => handleCambiarEstado(cita, a.estado)}
+                              >
+                                {a.texto}
+                              </button>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan="7" className="text-center py-4 text-muted">No hay citas registradas.</td>
+                    <td colSpan="8" className="text-center py-4 text-muted">No hay citas registradas.</td>
                   </tr>
                 )}
               </tbody>

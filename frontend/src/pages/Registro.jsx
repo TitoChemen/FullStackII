@@ -1,62 +1,72 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
+import { registrar } from '../services/apiService';
 
 export default function Registro() {
   const [nombre, setNombre] = useState('');
-  const [rut, setRut] = useState('');
+  const [apellido, setApellido] = useState('');
   const [email, setEmail] = useState('');
-  const [rol, setRol] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [mensajeValidacion, setMensajeValidacion] = useState('');
+  const [exito, setExito] = useState('');
+  const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
-  const manejarRegistro = (e) => {
+  const manejarRegistro = async (e) => {
     e.preventDefault();
+    setExito('');
 
-    if (!nombre || !rut || !email || !rol || !password || !passwordConfirm) {
+    if (!nombre.trim() || !apellido.trim() || !email.trim() || !password || !passwordConfirm) {
       setMensajeValidacion('Por favor, completa todos los campos.');
       return;
     }
-
+    if (nombre.trim().length > 100 || apellido.trim().length > 100) {
+      setMensajeValidacion('El nombre y el apellido no pueden superar los 100 caracteres.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setMensajeValidacion('Ingresa un correo electrónico válido.');
+      return;
+    }
+    if (password.length < 8 || password.length > 72) {
+      setMensajeValidacion('La contraseña debe tener entre 8 y 72 caracteres.');
+      return;
+    }
     if (password !== passwordConfirm) {
       setMensajeValidacion('Las contraseñas no coinciden.');
       return;
     }
 
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      setMensajeValidacion('Ingresa un correo electrónico válido.');
-      return;
-    }
-
-    if (password.length < 8) {
-      setMensajeValidacion('La contraseña debe tener al menos 8 caracteres.');
-      return;
-    }
-
-    // Garantiza que las cuentas demo existan antes de guardar la nueva
-    apiService.inicializarDatosDemo();
-    const resultado = apiService.registrarUsuario({ nombre, rut, email, rol, password });
-
-    if (!resultado.ok) {
-      setMensajeValidacion(resultado.error);
-      return;
-    }
-
+    setCargando(true);
     setMensajeValidacion('');
-    alert("¡Registro exitoso! Ahora inicia sesión con tu correo y contraseña.");
-    navigate('/login');
+    try {
+      // El rol NO se envía: el backend asigna DUENO_MASCOTA a las cuentas nuevas.
+      await registrar({
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        correo: email.trim(),
+        contrasena: password,
+      });
+      setExito('¡Registro exitoso! Redirigiendo al inicio de sesión...');
+      setTimeout(() => navigate('/login'), 1500);
+    } catch (err) {
+      setMensajeValidacion(
+        err.status === 409 ? 'Ya existe una cuenta registrada con ese correo.' : err.message
+      );
+    } finally {
+      setCargando(false);
+    }
   };
 
   const resetearRegistro = () => {
     setNombre('');
-    setRut('');
+    setApellido('');
     setEmail('');
-    setRol('');
     setPassword('');
     setPasswordConfirm('');
     setMensajeValidacion('');
+    setExito('');
   };
 
   return (
@@ -80,36 +90,38 @@ export default function Registro() {
           </h1>
 
           <p className="text-center text-muted mb-4">
-            Para dueños de mascotas y personal de la clínica
+            Cuenta para dueños de mascotas. El personal de la clínica recibe su acceso del administrador.
           </p>
 
           <form id="formularioRegistro" noValidate onSubmit={manejarRegistro}>
             <div className="row">
-              <div className="col-md-8 mb-3">
+              <div className="col-md-6 mb-3">
                 <label className="form-label">
-                  <i className="bi bi-person me-1"></i> Nombre completo
+                  <i className="bi bi-person me-1"></i> Nombre
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   id="regNombre"
-                  placeholder="Ej: Juan Pérez"
+                  placeholder="Ej: Juan"
+                  maxLength={100}
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                 />
               </div>
 
-              <div className="col-md-4 mb-3">
+              <div className="col-md-6 mb-3">
                 <label className="form-label">
-                  <i className="bi bi-card-heading me-1"></i> RUT
+                  <i className="bi bi-person me-1"></i> Apellido
                 </label>
                 <input
                   type="text"
                   className="form-control"
-                  id="regRut"
-                  placeholder="12345678-9"
-                  value={rut}
-                  onChange={(e) => setRut(e.target.value)}
+                  id="regApellido"
+                  placeholder="Ej: Pérez"
+                  maxLength={100}
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
                 />
               </div>
             </div>
@@ -126,26 +138,6 @@ export default function Registro() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">
-                <i className="bi bi-person-badge me-1"></i> Tipo de usuario
-              </label>
-              <select 
-                className="form-select" 
-                id="regRol"
-                value={rol}
-                onChange={(e) => setRol(e.target.value)}
-              >
-                <option value="">Selecciona un tipo de usuario</option>
-                <option value="DUEÑO">Dueño de mascota</option>
-                <option value="RECEPCIONISTA">Recepcionista / Operador</option>
-                <option value="VETERINARIO">Médico veterinario</option>
-              </select>
-              <div className="form-text mt-1 small">
-                Las cuentas de Administrador no se autorregistran: las crea otro administrador desde el panel interno.
-              </div>
             </div>
 
             <div className="row">
@@ -177,6 +169,12 @@ export default function Registro() {
               </div>
             </div>
 
+            {exito && (
+              <div className="alert alert-success mt-2" role="status">
+                {exito}
+              </div>
+            )}
+
             {mensajeValidacion && (
               <div className="alert alert-danger mt-2" role="alert">
                 {mensajeValidacion}
@@ -184,8 +182,8 @@ export default function Registro() {
             )}
 
             <div className="d-flex gap-2 mt-4">
-              <button type="submit" className="btn btn-warning text-dark fw-bold w-100">
-                <i className="bi bi-check-circle me-1"></i> Registrarse
+              <button type="submit" className="btn btn-warning text-dark fw-bold w-100" disabled={cargando}>
+                <i className="bi bi-check-circle me-1"></i> {cargando ? 'Registrando...' : 'Registrarse'}
               </button>
               <button type="button" className="btn btn-outline-secondary w-100" onClick={resetearRegistro}>
                 <i className="bi bi-eraser me-1"></i> Limpiar

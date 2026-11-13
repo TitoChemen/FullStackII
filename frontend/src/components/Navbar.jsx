@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useCarrito } from '../hooks/useCarrito';
+import { useAuth } from '../context/AuthContext';
+import { ETIQUETA_ROL, ROLES } from '../utils';
 
 export const Navbar = () => {
   const [abierto, setAbierto] = useState(false);
   const { cantidadTotal } = useCarrito();
+  const { autenticado, usuario, nombreCompleto, logout } = useAuth();
+  const navigate = useNavigate();
+  const destinoPortal = usuario?.rol === ROLES.DUENO ? '/fichas' : '/admin';
+
+  const salir = () => {
+    cerrar();
+    logout();
+    navigate('/');
+  };
 
   const cerrar = () => setAbierto(false);
   const claseLink = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`;
@@ -78,12 +89,28 @@ export const Navbar = () => {
                 </NavLink>
               </li>
             </ul>
-            <ul className="navbar-nav">
-              <li className="nav-item">
-                <NavLink className={claseLink} to="/login" onClick={cerrar}>
-                  <i className="bi bi-person-circle"></i> Portal médico
-                </NavLink>
-              </li>
+            <ul className="navbar-nav align-items-lg-center">
+              {autenticado ? (
+                <>
+                  <li className="nav-item">
+                    <NavLink className={claseLink} to={destinoPortal} onClick={cerrar}>
+                      <i className="bi bi-person-circle"></i> {nombreCompleto}
+                      <span className="badge bg-warning text-dark ms-2">{ETIQUETA_ROL[usuario.rol] || usuario.rol}</span>
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
+                    <button type="button" className="btn btn-outline-light btn-sm ms-lg-2 mt-2 mt-lg-0" onClick={salir}>
+                      <i className="bi bi-box-arrow-right me-1"></i> Cerrar sesión
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <li className="nav-item">
+                  <NavLink className={claseLink} to="/login" onClick={cerrar}>
+                    <i className="bi bi-person-circle"></i> Iniciar sesión
+                  </NavLink>
+                </li>
+              )}
             </ul>
           </div>
         </div>

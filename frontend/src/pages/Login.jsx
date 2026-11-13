@@ -1,40 +1,44 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService'; // Asegúrate de importar tu servicio
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { ROLES } from '../utils';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensajeValidacion, setMensajeValidacion] = useState('');
+  const [cargando, setCargando] = useState(false);
+  const { login, sesionExpirada } = useAuth();
   const navigate = useNavigate();
+  const ubicacion = useLocation();
 
-  const manejarLogin = (e) => {
-  e.preventDefault();
-  if (!email || !password) {
-    setMensajeValidacion('Por favor, ingresa tu correo y contraseña.');
-    return;
-  }
+  const manejarLogin = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !password) {
+      setMensajeValidacion('Por favor, ingresa tu correo y contraseña.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setMensajeValidacion('Ingresa un correo electrónico válido.');
+      return;
+    }
 
-  // Garantiza que las cuentas demo existan y valida contra los usuarios guardados
-  apiService.inicializarDatosDemo();
-  const resultado = apiService.autenticarUsuario(email, password);
-
-  if (!resultado.ok) {
-    setMensajeValidacion(resultado.error);
-    return;
-  }
-
-  const usuario = resultado.usuario;
-  localStorage.setItem('usuario_logueado', JSON.stringify(usuario));
-  setMensajeValidacion('');
-
-  // Redirigir según el rol
-  if (usuario.rol === 'VETERINARIO' || usuario.rol === 'DUEÑO') {
-    navigate('/fichas');
-  } else {
-    navigate('/admin');
-  }
-};
+    setCargando(true);
+    setMensajeValidacion('');
+    try {
+      const usuario = await login(email, password);
+      const destinoPorRol = usuario.rol === ROLES.DUENO ? '/fichas' : '/admin';
+      navigate(ubicacion.state?.desde || destinoPorRol, { replace: true });
+    } catch (err) {
+      setMensajeValidacion(
+        err.status === 401 || err.status === 403
+          ? 'Correo o contraseña incorrectos, o la cuenta está desactivada.'
+          : err.message
+      );
+    } finally {
+      setCargando(false);
+    }
+  };
 
   return (
     <>
@@ -61,7 +65,7 @@ export default function Login() {
                 type="email" 
                 className="form-control" 
                 id="loginEmail" 
-                placeholder="nombre@sanmarcos.cl"
+                placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -79,6 +83,12 @@ export default function Login() {
               />
             </div>
 
+            {sesionExpirada && !mensajeValidacion && (
+              <div className="alert alert-warning mt-2" role="alert">
+                Tu sesión expiró. Inicia sesión nuevamente.
+              </div>
+            )}
+
             {mensajeValidacion && (
               <div className="alert alert-danger mt-2" role="alert">
                 {mensajeValidacion}
@@ -86,8 +96,8 @@ export default function Login() {
             )}
 
             <div className="d-grid gap-2 mt-4">
-              <button type="submit" className="btn btn-warning text-dark fw-bold">
-                <i className="bi bi-box-arrow-in-right me-1"></i> Ingresar
+              <button type="submit" className="btn btn-warning text-dark fw-bold" disabled={cargando}>
+                <i className="bi bi-box-arrow-in-right me-1"></i> {cargando ? 'Ingresando...' : 'Ingresar'}
               </button>
               <Link to="/registro" className="btn btn-outline-secondary">
                 <i className="bi bi-person-plus me-1"></i> Crear una cuenta
@@ -95,13 +105,6 @@ export default function Login() {
             </div>
           </form>
 
-          <hr className="my-4" />
-          <p className="form-text-ayuda mb-1 small text-muted"><strong>Cuentas de demostración</strong>:</p>
-          <ul className="form-text-ayuda mb-0 small text-muted">
-            <li>Administrador — admin@sanmarcos.cl / Admin2026</li>
-            <li>Recepcionista — recepcion@sanmarcos.cl / Recepcion2026</li>
-            <li>Veterinario — veterinario@sanmarcos.cl / Vet2026a</li>
-          </ul>
         </div>
       </div>
 

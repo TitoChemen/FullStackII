@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { inicializarDatosDemo, getServicios, getMascotasPorDueno, crearCita } from '../services/apiService';
+import { getServicios } from '../services/catalogo';
+import { listarMascotas, listarMisMascotas, crearCita } from '../services/apiService';
 import { useCarrito } from '../hooks/useCarrito';
+import { useAuth } from '../context/AuthContext';
+import { ROLES, aFormatoJava, fechaHoy } from '../utils';
 
 const formatoCLP = (n) => `$${(n || 0).toLocaleString('es-CL')}`;
+const DURACION_MIN = 30; // cada servicio reserva un bloque de 30 minutos
+const HORA_APERTURA = '09:00';
+const HORA_CIERRE = '19:00';
 
 export default function Agendar() {
-  const [servicios] = useState(() => {
-    if (typeof inicializarDatosDemo === 'function') inicializarDatosDemo();
-    return typeof getServicios === 'function' ? getServicios() || [] : [];
-  });
+  const [servicios] = useState(() => getServicios());
   const [categoria, setCategoria] = useState('Todos');
   const [verCarrito, setVerCarrito] = useState(false);
   const [aviso, setAviso] = useState('');
@@ -18,19 +21,25 @@ export default function Agendar() {
   const [fechaCita, setFechaCita] = useState('');
   const [horaCita, setHoraCita] = useState('');
   const [errorCita, setErrorCita] = useState('');
-  const [hoy] = useState(() => new Date().toISOString().split('T')[0]);
-  
-  // Custom hook del carrito
-  const carritoHook = useCarrito ? useCarrito() : {};
-  const { 
-    carrito = [], 
-    agregar = () => {}, 
-    cambiarCantidad = () => {}, 
-    eliminar = () => {}, 
-    vaciar = () => {}, 
-    cantidadTotal = 0, 
-    total = 0 
-  } = carritoHook;
+  const [enviando, setEnviando] = useState(false);
+  const [citasCreadas, setCitasCreadas] = useState([]);
+  const [misMascotas, setMisMascotas] = useState([]);
+  const [cargandoMascotas, setCargandoMascotas] = useState(false);
+  const [hoy] = useState(() => fechaHoy());
+
+  const { usuario, autenticado } = useAuth();
+  const puedeAgendar = [ROLES.DUENO, ROLES.ADMIN, ROLES.RECEPCION].includes(usuario?.rol);
+  const esDueno = usuario?.rol === ROLES.DUENO;
+
+  const {
+    carrito = [],
+    agregar = () => {},
+    cambiarCantidad = () => {},
+    eliminar = () => {},
+    vaciar = () => {},
+    cantidadTotal = 0,
+    total = 0,
+  } = useCarrito();
 
   const categorias = ['Todos', ...new Set((servicios || []).map((s) => s.categoria).filter(Boolean))];
   const visibles = categoria === 'Todos' ? (servicios || []) : (servicios || []).filter((s) => s.categoria === categoria);
@@ -48,36 +57,75 @@ export default function Agendar() {
     return () => window.removeEventListener('keydown', onKey);
   }, [verCarrito]);
 
-  // Usuario con sesión iniciada y sus mascotas (solo un DUEÑO puede solicitar horas)
-  const usuario = JSON.parse(localStorage.getItem('usuario_logueado') || 'null');
-  const esDueno = usuario?.rol === 'DUEÑO';
-  const misMascotas = esDueno ? getMascotasPorDueno(usuario.id) : [];
+  // Mascotas reales desde el backend (dueño: las suyas; personal: todas)
+  useEffect(() => {
+    if (!puedeAgendar) return undefined;
+    let activo = true;
+    setCargandoMascotas(true);
+    (esDueno ? listarMisMascotas() : listarMascotas())
+      .then((datos) => activo && setMisMascotas(datos || []))
+      .catch((err) => activo && setErrorCita(err.message))
+      .finally(() => activo && setCargandoMascotas(false));
+    return () => {
+      activo = false;
+    };
+  }, [puedeAgendar, esDueno]);
 
-  const handleSolicitarCitas = () => {
-    const mascota = misMascotas.find(m => String(m.id) === String(mascotaId));
-    if (!mascota || !fechaCita || !horaCita) {
-      setErrorCita('Selecciona tu mascota, la fecha y la hora.');
+  const handleSolicitarCitas = async () => {
+    setErrorCita('');
+    if (!mascotaId || !fechaCita || !horaCita) {
+      setErrorCita('Selecciona la mascota, la fecha y la hora.');
       return;
     }
-    // Una cita pendiente por cada servicio de la lista
-    carrito.forEach(item => {
-      crearCita({
-        dueño: usuario.nombre,
-        duenoId: usuario.id,
-        mascota: mascota.nombreMascota,
-        mascotaId: mascota.id,
-        fecha: fechaCita,
-        hora: horaCita,
-        motivo: item.nombre
-      });
-    });
-    vaciar();
-    setErrorCita('');
-    setMascotaId('');
-    setFechaCita('');
-    setHoraCita('');
-    setVerCarrito(false);
-    setAviso('¡Solicitud enviada! La clínica confirmará tu hora.');
+    if (horaCita < HORA_APERTURA || horaCita > HORA_CIERRE) {
+      setErrorCita(`El horario de atención es de ${HORA_APERTURA} a ${HORA_CIERRE}.`);
+      return;
+    }
+
+    // Una cita por cada servicio (y por cada unidad), una a continuación de la otra.
+    const motivos = carrito.flatMap((item) => Array(item.cantidad).fill(item.nombre));
+    const inicioBase = new Date(`${fechaCita}T${horaCita}:00`);
+    if (Number.isNaN(inicioBase.getTime()) || inicioBase <= new Date()) {
+      setErrorCita('La fecha y hora de la cita deben ser futuras.');
+      return;
+    }
+    const finUltima = new Date(inicioBase.getTime() + motivos.length * DURACION_MIN * 60000);
+    const cierre = new Date(`${fechaCita}T${HORA_CIERRE}:00`);
+    if (finUltima > cierre) {
+      setErrorCita(`Con ${motivos.length} servicio(s) la atención terminaría después de las ${HORA_CIERRE}. Elige una hora más temprana.`);
+      return;
+    }
+
+    setEnviando(true);
+    const creadas = [];
+    try {
+      for (let i = 0; i < motivos.length; i += 1) {
+        const inicio = new Date(inicioBase.getTime() + i * DURACION_MIN * 60000);
+        const fin = new Date(inicio.getTime() + DURACION_MIN * 60000);
+        const cita = await crearCita({
+          mascotaId: Number(mascotaId),
+          fechaHoraInicio: aFormatoJava(inicio),
+          fechaHoraFin: aFormatoJava(fin),
+          motivo: motivos[i],
+        });
+        creadas.push(cita);
+      }
+      vaciar();
+      setMascotaId('');
+      setFechaCita('');
+      setHoraCita('');
+      setVerCarrito(false);
+      setCitasCreadas(creadas);
+      setAviso('¡Solicitud enviada! La clínica confirmará tu hora.');
+    } catch (err) {
+      // Si algunas citas ya se guardaron, se informa cuáles.
+      setCitasCreadas(creadas);
+      setErrorCita(
+        `${err.message}${creadas.length ? ` (se alcanzaron a registrar ${creadas.length} cita(s) antes del error)` : ''}`
+      );
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const handleAgregar = (servicio) => {
@@ -133,6 +181,21 @@ export default function Agendar() {
           ))}
         </div>
       </div>
+
+      {citasCreadas.length > 0 && (
+        <div className="container mb-5">
+          <div className="alert alert-success">
+            <h6 className="fw-bold mb-2"><i className="bi bi-check-circle-fill me-1"></i> Citas registradas en el sistema</h6>
+            <ul className="mb-0">
+              {citasCreadas.map((c) => (
+                <li key={c.id}>
+                  Cita #{c.id} — {c.motivo} — {new Date(c.fechaHoraInicio).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })} — <strong>{c.estado}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {aviso && (
         <div className="alert alert-success position-fixed bottom-0 end-0 m-3 shadow-lg d-flex align-items-center gap-2" role="status" style={{ zIndex: 2000 }}>
@@ -199,22 +262,29 @@ export default function Agendar() {
 
                   {carrito.length > 0 && (
                     <div className="border-top mt-3 pt-3">
-                      {!esDueno ? (
+                      {!autenticado ? (
                         <p className="mb-0 text-center">
                           Para solicitar tu hora, <Link to="/login" className="fw-bold text-warning">inicia sesión</Link> o{' '}
                           <Link to="/registro" className="fw-bold text-warning">crea tu cuenta</Link> como dueño de mascota.
                         </p>
+                      ) : !puedeAgendar ? (
+                        <p className="mb-0 text-center text-muted">
+                          Tu rol ({usuario.rol}) no solicita citas desde esta pantalla.
+                        </p>
+                      ) : cargandoMascotas ? (
+                        <p className="mb-0 text-center text-muted">Cargando mascotas...</p>
                       ) : misMascotas.length === 0 ? (
                         <p className="mb-0 text-center">
-                          Aún no tienes mascotas registradas. <Link to="/fichas" className="fw-bold text-warning">Registra a tu mascota</Link> para poder agendar.
+                          {esDueno ? 'Aún no tienes mascotas registradas. ' : 'No hay mascotas registradas. '}
+                          <Link to="/fichas" className="fw-bold text-warning">Registra una mascota</Link> para poder agendar.
                         </p>
                       ) : (
                         <div className="row g-2">
                           <div className="col-md-4">
                             <select className="form-select" value={mascotaId} onChange={(e) => setMascotaId(e.target.value)}>
-                              <option value="">Selecciona tu mascota...</option>
-                              {misMascotas.map(m => (
-                                <option key={m.id} value={m.id}>{m.nombreMascota} ({m.especie || 'Sin especie'})</option>
+                              <option value="">Selecciona la mascota...</option>
+                              {misMascotas.map((m) => (
+                                <option key={m.id} value={m.id}>{m.nombre} ({m.especie}){!esDueno ? ` · dueño #${m.duenoId}` : ''}</option>
                               ))}
                             </select>
                           </div>
@@ -222,11 +292,11 @@ export default function Agendar() {
                             <input type="date" className="form-control" min={hoy} value={fechaCita} onChange={(e) => setFechaCita(e.target.value)} />
                           </div>
                           <div className="col-md-4">
-                            <input type="time" className="form-control" min="09:00" max="19:00" value={horaCita} onChange={(e) => setHoraCita(e.target.value)} />
+                            <input type="time" className="form-control" min={HORA_APERTURA} max={HORA_CIERRE} value={horaCita} onChange={(e) => setHoraCita(e.target.value)} />
                           </div>
-                          {errorCita && <div className="col-12 text-danger small">{errorCita}</div>}
                         </div>
                       )}
+                      {errorCita && <div className="text-danger small mt-2" role="alert">{errorCita}</div>}
                     </div>
                   )}
                 </div>
@@ -237,9 +307,9 @@ export default function Agendar() {
                   <button type="button" className="btn btn-secondary btn-sm" onClick={() => setVerCarrito(false)}>
                     Cerrar
                   </button>
-                  {esDueno && misMascotas.length > 0 && (
-                    <button type="button" className="btn btn-warning text-dark fw-bold btn-sm" onClick={handleSolicitarCitas} disabled={carrito.length === 0}>
-                      <i className="bi bi-send me-1"></i> Solicitar hora
+                  {puedeAgendar && misMascotas.length > 0 && (
+                    <button type="button" className="btn btn-warning text-dark fw-bold btn-sm" onClick={handleSolicitarCitas} disabled={carrito.length === 0 || enviando}>
+                      <i className="bi bi-send me-1"></i> {enviando ? 'Enviando...' : 'Solicitar hora'}
                     </button>
                   )}
                 </div>
