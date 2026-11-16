@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { inicializarDatosDemo, getServicios } from '../services/apiService';
+import { getServicios } from '../services/catalogo';
 import clinica from '../assets/clinica.png';
 
 // Ícono de Bootstrap Icons según la categoría del servicio
@@ -12,12 +12,7 @@ const ICONOS = {
 };
 
 export default function Home() {
-  const [servicios] = useState(() => {
-    if (typeof inicializarDatosDemo === 'function') {
-      inicializarDatosDemo();
-    }
-    return typeof getServicios === 'function' ? getServicios() || [] : [];
-  });
+  const servicios = getServicios();
 
   return (
     <Layout>

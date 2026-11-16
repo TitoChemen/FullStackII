@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCarrito, saveCarrito } from '../services/apiService';
+import { getCarrito, saveCarrito } from '../services/catalogo';
 
 // Evento propio para que Navbar y Agendar vean el mismo carrito al instante
 const EVENTO_CARRITO = 'sanmarcos:carrito';
