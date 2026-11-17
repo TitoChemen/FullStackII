@@ -17,6 +17,11 @@ export const registrar = ({ nombre, apellido, correo, contrasena }) =>
 
 export const miPerfil = () => request(`${V1}/usuarios/me`);
 export const listarUsuarios = () => request(`${V1}/usuarios`); // solo ADMINISTRADOR
+export const refrescarToken = () => request(`${V1}/auth/refresh`, { method: 'POST' });
+export const actualizarUsuario = (id, datos) =>
+  request(`${V1}/usuarios/${id}`, { method: 'PUT', body: datos });
+export const desactivarUsuario = (id) => request(`${V1}/usuarios/${id}`, { method: 'DELETE' });
+
 
 // ---------- Mascotas ----------
 export const listarMascotas = () => request(`${V1}/mascotas`); // personal
