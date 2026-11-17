@@ -43,6 +43,27 @@ export function AuthProvider({ children }) {
     sesionRef.current = sesion;
   }, [sesion]);
 
+    // Renueva el token 2 minutos antes de que venza
+  const renovar = useCallback(async () => {
+    const resp = await api.refrescarToken();
+    const nueva = {
+      token: resp.accessToken,
+      usuario: resp.usuario,
+      expira: expiracionDelToken(resp.accessToken) ?? Date.now() + (resp.expiresIn || 1800) * 1000,
+    };
+    sessionStorage.setItem(CLAVE_SESION, JSON.stringify(nueva));
+    sesionRef.current = nueva;
+    setSesion(nueva);
+  }, []);
+
+  useEffect(() => {
+    if (!sesion?.expira) return undefined;
+    const faltan = sesion.expira - Date.now() - 2 * 60 * 1000;
+    if (faltan <= 0) return undefined;
+    const t = setTimeout(() => { renovar().catch(() => {}); }, Math.min(faltan, 2147483647));
+    return () => clearTimeout(t);
+  }, [sesion, renovar]);
+
   const logout = useCallback((porExpiracion = false) => {
     sessionStorage.removeItem(CLAVE_SESION);
     sesionRef.current = null;
@@ -95,8 +116,9 @@ export function AuthProvider({ children }) {
         : '',
       login,
       logout,
+      renovar,
     }),
-    [sesion, sesionExpirada, login, logout]
+    [sesion, sesionExpirada, login, logout, renovar]
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;

@@ -38,6 +38,28 @@ public class SecurityConfig {
                         )
                 )
 
+                
+                .authorizeHttpRequests(auth -> auth
+
+                .requestMatchers(
+                        HttpMethod.OPTIONS, "/**"
+                ).permitAll()
+
+                // ← NUEVO: el refresh exige token válido
+                .requestMatchers(
+                        HttpMethod.POST, "/api/v1/auth/refresh"
+                ).authenticated()
+
+                .requestMatchers(
+                        "/api/v1/auth/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
+                ).permitAll()
+
+                .anyRequest().authenticated()
+                )
+
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(

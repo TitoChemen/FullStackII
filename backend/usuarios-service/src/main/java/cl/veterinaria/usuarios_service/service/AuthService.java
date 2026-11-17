@@ -102,4 +102,22 @@ public class AuthService {
     private String normalizarCorreo(String correo) {
         return correo.trim().toLowerCase(Locale.ROOT);
     }
+
+
+        @Transactional(readOnly = true)
+    public AuthResponse refrescar(Long usuarioId) {
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .filter(Usuario::isActivo)
+                .orElseThrow(() -> new BadCredentialsException(
+                        "La cuenta no existe o está desactivada"
+                ));
+
+        return new AuthResponse(
+                jwtService.generarToken(usuario),
+                "Bearer",
+                jwtService.obtenerDuracionSegundos(),
+                UsuarioResponse.fromEntity(usuario)
+        );
+    }
 }

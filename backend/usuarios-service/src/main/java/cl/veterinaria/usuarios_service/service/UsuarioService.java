@@ -5,11 +5,13 @@ import cl.veterinaria.usuarios_service.dto.response.UsuarioResponse;
 import cl.veterinaria.usuarios_service.entity.Usuario;
 import cl.veterinaria.usuarios_service.enums.Rol;
 import cl.veterinaria.usuarios_service.repository.UsuarioRepository;
+import cl.veterinaria.usuarios_service.dto.request.UsuarioUpdateRequest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.List;
 
@@ -63,6 +65,46 @@ public class UsuarioService {
     // Comprueba si el usuario puede ser propietario de una mascota
 
     // Comprueba si el usuario puede ser propietario de una mascota
+
+            @Transactional
+    public UsuarioResponse actualizar(Long id, UsuarioUpdateRequest request) {
+
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado"
+                ));
+
+        usuario.setNombre(request.nombre().trim());
+        usuario.setApellido(request.apellido().trim());
+        usuario.setRol(request.rol());
+        usuario.setActivo(request.activo());
+
+        return UsuarioResponse.fromEntity(usuarioRepository.save(usuario));
+    }
+
+    // Eliminación lógica: se desactiva la cuenta (igual que en mascotas)
+    @Transactional
+    public void desactivar(Long id, Long idSolicitante) {
+
+        if (id.equals(idSolicitante)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No puedes desactivar tu propia cuenta"
+            );
+        }
+
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado"
+                ));
+
+        usuario.setActivo(false);
+        usuarioRepository.save(usuario);
+    }
+
+
     public boolean esPropietarioValido(Long id) {
 
         return usuarioRepository.findById(id)

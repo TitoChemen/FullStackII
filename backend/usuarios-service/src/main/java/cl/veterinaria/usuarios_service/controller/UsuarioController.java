@@ -3,6 +3,8 @@ package cl.veterinaria.usuarios_service.controller;
 
 import cl.veterinaria.usuarios_service.dto.response.UsuarioResponse;
 import cl.veterinaria.usuarios_service.service.UsuarioService;
+import cl.veterinaria.usuarios_service.dto.request.UsuarioUpdateRequest;
+
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -16,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/usuarios")
@@ -103,6 +106,27 @@ public class UsuarioController {
         return ResponseEntity.ok(
                 Map.of("valido", valido)
         );
+    }
+
+        @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponse> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody UsuarioUpdateRequest request
+    ) {
+        return ResponseEntity.ok(
+                usuarioService.actualizar(id, request)
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Void> desactivar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        usuarioService.desactivar(id, Long.parseLong(jwt.getSubject()));
+        return ResponseEntity.noContent().build();
     }
 
 }
