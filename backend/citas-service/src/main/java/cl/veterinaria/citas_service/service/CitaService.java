@@ -9,6 +9,7 @@ import cl.veterinaria.citas_service.entity.Cita;
 import cl.veterinaria.citas_service.enums.EstadoCita;
 import cl.veterinaria.citas_service.repository.CitaRepository;
 import cl.veterinaria.citas_service.dto.request.CambiarEstadoCitaRequest;
+import cl.veterinaria.citas_service.dto.request.CitaUpdateRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -487,6 +488,133 @@ public class CitaService {
         cita.setVeterinarioId(veterinarioId);
 
         return convertirRespuesta(citaRepository.save(cita));
+    }
+        @Transactional(readOnly = true)
+    public List<CitaResponse> listarTodas(Jwt jwt) {
+
+        if (!esPersonalAutorizado(jwt)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Solo el personal puede listar todas las citas"
+            );
+        }
+
+        return citaRepository
+                .findAllByOrderByFechaHoraInicioDesc()
+                .stream()
+                .map(this::convertirRespuesta)
+                .toList();
+    }
+
+    @Transactional
+    public CitaResponse actualizar(
+            Long id,
+            CitaUpdateRequest request,
+            Jwt jwt
+    ) {
+
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "La cita no existe"
+                ));
+
+        // El personal siempre puede; un dueño solo si la mascota es suya
+        if (!esPersonalAutorizado(jwt)) {
+            validarAccesoPropietario(cita.getMascotaId(), jwt);
+        }
+
+        if (cita.getEstado() != EstadoCita.PENDIENTE
+                && cita.getEstado() != EstadoCita.CONFIRMADA) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Solo se pueden modificar citas pendientes o confirmadas"
+            );
+        }
+
+        LocalDateTime inicio = request.fechaHoraInicio();
+        LocalDateTime fin = request.fechaHoraFin();
+
+        if (!inicio.isAfter(LocalDateTime.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La cita debe comenzar en una fecha futura"
+            );
+        }
+
+        if (!fin.isAfter(inicio)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de término debe ser posterior al inicio"
+            );
+        }
+
+        // Conflicto de horario de la mascota (sin contar esta misma cita)
+        boolean mascotaOcupada = citaRepository
+                .findByMascotaIdOrderByFechaHoraInicioDesc(cita.getMascotaId())
+                .stream()
+                .filter(otra -> !otra.getId().equals(cita.getId()))
+                .anyMatch(otra -> seSuperpone(otra, inicio, fin));
+
+        if (mascotaOcupada) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "La mascota ya tiene una cita en ese horario"
+            );
+        }
+
+        // Conflicto de horario del veterinario, si ya hay uno asignado
+        if (cita.getVeterinarioId() != null) {
+
+            boolean veterinarioOcupado = citaRepository
+                    .findByVeterinarioIdOrderByFechaHoraInicioAsc(
+                            cita.getVeterinarioId()
+                    )
+                    .stream()
+                    .filter(otra -> !otra.getId().equals(cita.getId()))
+                    .anyMatch(otra -> seSuperpone(otra, inicio, fin));
+
+            if (veterinarioOcupado) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "El veterinario ya tiene una cita en ese horario"
+                );
+            }
+        }
+
+        cita.setFechaHoraInicio(inicio);
+        cita.setFechaHoraFin(fin);
+        cita.setMotivo(request.motivo());
+        cita.setObservaciones(request.observaciones());
+
+        return convertirRespuesta(citaRepository.save(cita));
+    }
+
+    @Transactional
+    public void eliminar(Long id, Jwt jwt) {
+
+        if (!tieneRol(jwt, "ADMINISTRADOR")) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Solo un administrador puede eliminar citas"
+            );
+        }
+
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "La cita no existe"
+                ));
+
+        if (cita.getEstado() != EstadoCita.PENDIENTE
+                && cita.getEstado() != EstadoCita.CANCELADA) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Solo se pueden eliminar citas pendientes o canceladas"
+            );
+        }
+
+        citaRepository.delete(cita);
     }
 
 }

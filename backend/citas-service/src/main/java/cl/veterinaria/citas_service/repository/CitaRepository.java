@@ -19,4 +19,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
             Long veterinarioId
     );
 
+        // Listado general, de la más reciente a la más antigua
+    List<Cita> findAllByOrderByFechaHoraInicioDesc();
+
 }
