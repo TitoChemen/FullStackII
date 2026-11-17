@@ -3,6 +3,7 @@ package cl.veterinaria.historial_service.controller;
 import cl.veterinaria.historial_service.dto.request.HistorialRequest;
 import cl.veterinaria.historial_service.dto.response.HistorialResponse;
 import cl.veterinaria.historial_service.service.HistorialService;
+import cl.veterinaria.historial_service.dto.request.HistorialUpdateRequest;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -76,5 +77,22 @@ public class HistorialController {
             @AuthenticationPrincipal Jwt jwt
     ) {
         return historialService.obtenerPorCita(citaId, jwt);
+    }
+        @PutMapping("/{id}")
+    public HistorialResponse actualizar(
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody HistorialUpdateRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return historialService.actualizar(id, request, jwt);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(
+            @PathVariable @Positive Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        historialService.eliminar(id, jwt);
+        return ResponseEntity.noContent().build();
     }
 }
