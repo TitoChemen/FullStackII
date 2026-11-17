@@ -17,7 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import cl.veterinaria.citas_service.dto.request.AsignarVeterinarioRequest;
-
+import cl.veterinaria.citas_service.dto.request.CitaUpdateRequest;
 import cl.veterinaria.citas_service.dto.request.CambiarEstadoCitaRequest;
 import org.springframework.web.bind.annotation.PatchMapping;
 
@@ -111,6 +111,33 @@ public class CitaController {
         );
 
         return ResponseEntity.ok(respuesta);
+    }
+        // Listar todas las citas (solo personal)
+    @GetMapping
+    public ResponseEntity<List<CitaResponse>> listarTodas(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity.ok(citaService.listarTodas(jwt));
+    }
+
+    // Reprogramar / editar una cita
+    @PutMapping("/{id}")
+    public ResponseEntity<CitaResponse> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody CitaUpdateRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity.ok(citaService.actualizar(id, request, jwt));
+    }
+
+    // Eliminar una cita (solo administrador)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        citaService.eliminar(id, jwt);
+        return ResponseEntity.noContent().build();
     }
 
 

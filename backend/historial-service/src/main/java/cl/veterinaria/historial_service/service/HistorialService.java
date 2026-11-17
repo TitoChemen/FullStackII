@@ -7,6 +7,7 @@ import cl.veterinaria.historial_service.dto.request.HistorialRequest;
 import cl.veterinaria.historial_service.dto.response.HistorialResponse;
 import cl.veterinaria.historial_service.entity.HistorialClinico;
 import cl.veterinaria.historial_service.repository.HistorialRepository;
+import cl.veterinaria.historial_service.dto.request.HistorialUpdateRequest;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -232,5 +233,50 @@ public class HistorialService {
                 historial.getObservaciones(),
                 historial.getFechaCreacion()
         );
+    }
+        @Transactional
+    public HistorialResponse actualizar(
+            Long id,
+            HistorialUpdateRequest request,
+            Jwt jwt
+    ) {
+        HistorialClinico historial = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No se encontró el historial clínico"
+                ));
+
+        // Administrador o el veterinario autor del historial
+        validarAccesoVeterinario(jwt, historial.getVeterinarioId());
+
+        historial.setFechaAtencion(request.fechaAtencion());
+        historial.setMotivoConsulta(request.motivoConsulta());
+        historial.setDiagnostico(request.diagnostico());
+        historial.setTratamiento(request.tratamiento());
+        historial.setIndicaciones(request.indicaciones());
+        historial.setObservaciones(request.observaciones());
+
+        return convertir(repository.save(historial));
+    }
+
+    @Transactional
+    public void eliminar(Long id, Jwt jwt) {
+
+        List<String> roles = jwt.getClaimAsStringList("roles");
+
+        if (roles == null || !roles.contains("ADMINISTRADOR")) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Solo un administrador puede eliminar historiales"
+            );
+        }
+
+        HistorialClinico historial = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No se encontró el historial clínico"
+                ));
+
+        repository.delete(historial);
     }
 }
