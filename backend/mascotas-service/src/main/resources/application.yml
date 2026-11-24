@@ -8,7 +8,7 @@ spring:
   datasource:
     url: ${MASCOTAS_DB_URL:jdbc:mysql://localhost:3306/veterinaria_mascotas}
     username: ${MASCOTAS_DB_USER:vet_mascotas}
-    password: ""
+    password: ${MASCOTAS_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
