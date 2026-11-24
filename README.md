@@ -289,24 +289,3 @@ Cubren la lógica de negocio: autenticación y refresh de token, actualización 
 ---
 
 ## 📁 Estructura del repositorio
-
-```
-├── backend/
-│   ├── api-gateway/
-│   ├── eureka-server/
-│   ├── usuarios-service/
-│   ├── mascotas-service/
-│   ├── citas-service/
-│   └── historial-service/
-├── frontend/
-│   └── src/
-│       ├── components/     (Navbar, Layout, RutaProtegida, ...)
-│       ├── context/        (AuthContext: sesión y token)
-│       ├── pages/          (Home, Login, Registro, Admin, Fichas, Usuarios, ...)
-│       ├── services/       (http.js, apiService.js, catalogo.js)
-│       └── hooks/
-├── database/               (scripts SQL)
-├── scripts/                (iniciar-windows.ps1, iniciar-linux.sh)
-├── docs/                   (manual de usuario y documento de integración)
-├── .env.example
-└── README.md
