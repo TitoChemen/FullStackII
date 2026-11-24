@@ -310,4 +310,3 @@ Cubren la lógica de negocio: autenticación y refresh de token, actualización 
 ├── docs/                   (manual de usuario y documento de integración)
 ├── .env.example
 └── README.md
-```
